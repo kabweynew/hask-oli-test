@@ -1,0 +1,19 @@
+{
+  "name": "WKABE TEST",
+  "short_name": "WKABE🧪",
+  "description": "Hask Services — TEST version",
+  "start_url": "/OliTest/",
+  "scope": "/OliTest/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1623",
+  "theme_color": "#f59e0b",
+  "icons": [
+    {
+      "src": "splash.jpg",
+      "sizes": "any",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}

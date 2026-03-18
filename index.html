@@ -1,0 +1,2419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Hask — Truck Tracker</title>
+<meta name="theme-color" content="#0f1623">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg: #0f1623;
+    --bg2: #161e2e;
+    --bg3: #1e2a3f;
+    --bg4: #243048;
+    --card: #1a2235;
+    --border: #2a3a55;
+    --text: #e8edf5;
+    --text2: #8a9bb5;
+    --text3: #5a6f8a;
+    --accent: #3b82f6;
+    --accent2: #1d6fe8;
+    --green: #22c55e;
+    --orange: #f59e0b;
+    --red: #ef4444;
+    --purple: #a855f7;
+    --teal: #14b8a6;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; min-height: 100vh; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* ── LOGIN ── */
+  #loginScreen {
+    background: linear-gradient(160deg, #0f1623 0%, #162038 50%, #0f1623 100%);
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .login-logo {
+    width: 72px; height: 72px;
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; font-weight: 700; color: #fff;
+    margin-bottom: 12px;
+    box-shadow: 0 8px 32px rgba(59,130,246,0.4);
+  }
+  .login-title { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+  .login-sub { color: var(--text2); font-size: 14px; margin-bottom: 32px; }
+  .login-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; width: 100%; max-width: 360px;
+  }
+  .login-btn {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    color: var(--text);
+  }
+  .login-btn:active { transform: scale(0.96); background: var(--bg3); }
+  .login-btn .avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    margin: 0 auto 8px;
+  }
+  .login-btn .role-name { font-size: 14px; font-weight: 600; }
+  .login-btn .role-label { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .login-btn.admin-btn { grid-column: 1/-1; }
+  .login-btn.admin-btn .avatar { width: 52px; height: 52px; font-size: 20px; }
+
+  /* ── PIN SCREEN ── */
+  #pinScreen {
+    background: var(--bg);
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .pin-avatar {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .pin-name { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .pin-role { color: var(--text2); font-size: 13px; margin-bottom: 28px; }
+  .pin-dots { display: flex; gap: 12px; margin-bottom: 28px; }
+  .pin-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    transition: all 0.2s;
+  }
+  .pin-dot.filled { background: var(--accent); border-color: var(--accent); }
+  .pin-keypad {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 12px; width: 240px;
+  }
+  .pin-key {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    height: 56px;
+    font-size: 20px; font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pin-key:active { transform: scale(0.92); background: var(--accent); }
+  .pin-key.back { font-size: 14px; color: var(--text2); }
+  .pin-key.back-btn { grid-column: 1; }
+  .pin-error { color: var(--red); font-size: 13px; margin-top: 12px; min-height: 18px; }
+
+  /* ── HEADER ── */
+  .app-header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .header-logo {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: #fff;
+  }
+  .header-title { font-size: 15px; font-weight: 700; }
+  .header-sub { font-size: 11px; color: var(--text2); }
+  .header-right { display: flex; align-items: center; gap: 8px; }
+  .role-badge {
+    font-size: 10px; font-weight: 700;
+    padding: 3px 8px; border-radius: 20px;
+    letter-spacing: 0.05em;
+  }
+  .role-badge.admin { background: rgba(168,85,247,0.2); color: var(--purple); border: 1px solid rgba(168,85,247,0.3); }
+  .role-badge.cashier { background: rgba(59,130,246,0.2); color: var(--accent); border: 1px solid rgba(59,130,246,0.3); }
+  .role-badge.worker { background: rgba(34,197,94,0.2); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+  .add-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 7px 14px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .add-btn:active { transform: scale(0.95); background: var(--accent2); }
+
+  /* ── MAIN CONTENT ── */
+  .main-content { flex: 1; overflow-y: auto; padding-bottom: 80px; }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    gap: 8px; padding: 12px 16px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 8px;
+    text-align: center;
+  }
+  .stat-num { font-size: 20px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .stat-label { font-size: 9px; color: var(--text3); font-weight: 600; letter-spacing: 0.05em; margin-top: 2px; }
+  .stat-num.blue { color: var(--accent); }
+  .stat-num.green { color: var(--green); }
+  .stat-num.orange { color: var(--orange); }
+  .stat-num.red { color: var(--red); }
+  .stat-num.teal { color: var(--teal); }
+
+  /* ── DATE SELECTOR ── */
+  .date-bar { padding: 8px 16px; display: flex; align-items: center; gap: 8px; }
+  .date-chip {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    font-family: inherit;
+  }
+  .date-input-wrap {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .date-input-wrap input {
+    background: none; border: none; color: var(--text);
+    font-size: 13px; font-weight: 600; font-family: inherit;
+    flex: 1; outline: none;
+  }
+
+  /* ── FILTER TABS ── */
+  .filter-bar { padding: 8px 16px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+  .filter-bar::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    color: var(--text2);
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .filter-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* ── WORKER CHIPS ── */
+  .worker-bar { padding: 4px 16px 8px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+  .worker-bar::-webkit-scrollbar { display: none; }
+  .worker-chip {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    color: var(--text2);
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+    font-family: inherit;
+  }
+  .worker-chip.active { color: #fff; }
+  .worker-chip .wdot { width: 8px; height: 8px; border-radius: 50%; }
+  .wcount { font-size: 10px; opacity: 0.7; }
+
+  /* ── SECTION TITLE ── */
+  .section-header {
+    padding: 8px 16px 4px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .section-title { font-size: 11px; font-weight: 700; color: var(--text3); letter-spacing: 0.08em; }
+  .new-btn {
+    font-size: 12px; font-weight: 600; color: var(--accent);
+    background: none; border: none; cursor: pointer; font-family: inherit;
+  }
+
+  /* ── TRUCK CARDS ── */
+  .trucks-list { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; }
+  .truck-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .truck-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 3px 0 0 3px;
+  }
+  .truck-card.paid::before { background: var(--green); }
+  .truck-card.partial::before { background: var(--orange); }
+  .truck-card.unpaid::before { background: var(--red); }
+  .truck-card.pending::before { background: var(--purple); }
+  .truck-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
+  .truck-plate {
+    font-size: 16px; font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+  .status-badge {
+    font-size: 10px; font-weight: 700;
+    padding: 3px 8px; border-radius: 20px;
+    letter-spacing: 0.03em;
+  }
+  .status-badge.paid { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+  .status-badge.partial { background: rgba(245,158,11,0.15); color: var(--orange); border: 1px solid rgba(245,158,11,0.3); }
+  .status-badge.unpaid { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+  .status-badge.pending { background: rgba(168,85,247,0.15); color: var(--purple); border: 1px solid rgba(168,85,247,0.3); }
+  .truck-meta { font-size: 11px; color: var(--text2); margin-bottom: 8px; line-height: 1.6; }
+  .truck-meta span { margin-right: 8px; }
+  .truck-earnings { font-size: 12px; color: var(--text2); margin-bottom: 10px; }
+  .truck-actions { display: flex; gap: 8px; }
+  .truck-action-btn {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 7px;
+    font-size: 11px; font-weight: 600;
+    cursor: pointer;
+    color: var(--text2);
+    transition: all 0.2s;
+    font-family: inherit;
+    text-align: center;
+  }
+  .truck-action-btn:active { transform: scale(0.95); }
+  .truck-action-btn.primary { background: rgba(59,130,246,0.15); color: var(--accent); border-color: rgba(59,130,246,0.3); }
+  .truck-action-btn.danger { background: rgba(239,68,68,0.1); color: var(--red); border-color: rgba(239,68,68,0.2); }
+  .truck-worker-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 600;
+    padding: 3px 8px; border-radius: 20px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .truck-worker-badge .wdot2 { width: 7px; height: 7px; border-radius: 50%; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state { padding: 40px 16px; text-align: center; }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { color: var(--text2); font-size: 14px; }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .nav-btn {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 10px 4px 8px;
+    cursor: pointer;
+    border: none; background: none;
+    color: var(--text3);
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .nav-btn.active { color: var(--accent); }
+  .nav-btn .nav-icon { font-size: 20px; margin-bottom: 3px; }
+  .nav-btn .nav-label { font-size: 9px; font-weight: 600; letter-spacing: 0.05em; }
+
+  /* ── WORKERS TAB ── */
+  .workers-list { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .worker-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .worker-card-header {
+    padding: 14px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer;
+  }
+  .worker-avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .worker-info { flex: 1; }
+  .worker-name { font-size: 15px; font-weight: 700; }
+  .worker-stats-row { display: flex; gap: 12px; margin-top: 4px; }
+  .worker-stat { font-size: 11px; color: var(--text2); }
+  .worker-stat span { color: var(--text); font-weight: 600; }
+  .expand-icon { color: var(--text3); font-size: 14px; transition: transform 0.2s; }
+  .worker-card.expanded .expand-icon { transform: rotate(180deg); }
+  .worker-details {
+    border-top: 1px solid var(--border);
+    padding: 14px;
+    display: none;
+  }
+  .worker-card.expanded .worker-details { display: block; }
+  .detail-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { font-size: 12px; color: var(--text2); }
+  .detail-val { font-size: 12px; font-weight: 600; }
+  .detail-val.green { color: var(--green); }
+  .detail-val.red { color: var(--red); }
+  .detail-val.orange { color: var(--orange); }
+
+  /* ── ADVANCES TAB ── */
+  .advances-list { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; }
+  .advance-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .advance-icon {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: rgba(239,68,68,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .advance-info { flex: 1; }
+  .advance-worker { font-size: 14px; font-weight: 600; }
+  .advance-meta { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .advance-amount { font-size: 16px; font-weight: 700; color: var(--red); font-family: 'JetBrains Mono', monospace; }
+  .advance-delete {
+    background: none; border: none; color: var(--text3);
+    cursor: pointer; font-size: 16px; padding: 4px;
+  }
+
+  /* ── REPORTS TAB ── */
+  .reports-content { padding: 16px; }
+  .report-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .report-title { font-size: 13px; font-weight: 700; color: var(--text2); margin-bottom: 12px; letter-spacing: 0.05em; }
+  .report-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .report-row:last-child { border-bottom: none; }
+  .report-label { font-size: 13px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
+  .report-val { font-size: 14px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+  /* ── MANAGE TAB ── */
+  .manage-content { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .manage-section-title {
+    font-size: 11px; font-weight: 700; color: var(--text3);
+    letter-spacing: 0.08em; margin-bottom: 4px;
+  }
+  .manage-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .manage-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .manage-item:last-child { border-bottom: none; }
+  .manage-item-left { display: flex; align-items: center; gap: 10px; }
+  .manage-item-icon { font-size: 18px; }
+  .manage-item-name { font-size: 14px; font-weight: 600; }
+  .manage-item-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .manage-item-right { display: flex; gap: 8px; align-items: center; }
+  .manage-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 5px 10px;
+    font-size: 11px; font-weight: 600;
+    cursor: pointer;
+    color: var(--text2);
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .manage-btn.danger { color: var(--red); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1); }
+  .lang-btn {
+    background: var(--bg3);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 16px;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    color: var(--text2);
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .lang-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* ── MODALS ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: none; align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 20px 32px;
+    width: 100%; max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; display: block; letter-spacing: 0.05em; }
+  .form-input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 15px; font-weight: 500;
+    color: var(--text);
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .form-select {
+    width: 100%;
+    background: var(--bg3);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 15px;
+    color: var(--text);
+    font-family: inherit;
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+  }
+  .radio-group { display: flex; flex-direction: column; gap: 8px; }
+  .radio-opt {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px;
+    background: var(--bg3);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .radio-opt.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .radio-opt input { display: none; }
+  .radio-dot {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .radio-opt.selected .radio-dot { border-color: var(--accent); background: var(--accent); }
+  .radio-opt.selected .radio-dot::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #fff; }
+  .radio-text { flex: 1; }
+  .radio-title { font-size: 13px; font-weight: 600; }
+  .radio-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .btn-primary {
+    flex: 1;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    font-size: 15px; font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .btn-primary:active { transform: scale(0.97); background: var(--accent2); }
+  .btn-secondary {
+    flex: 1;
+    background: var(--bg3);
+    color: var(--text2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    font-size: 15px; font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+
+  /* ── PERMISSIONS TOGGLE ── */
+  .perm-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .perm-row:last-child { border-bottom: none; }
+  .perm-label { font-size: 13px; font-weight: 500; }
+  .toggle {
+    width: 44px; height: 24px;
+    background: var(--bg3);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle.on { background: var(--accent); border-color: var(--accent); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    top: 1px; left: 1px;
+    transition: all 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  .toggle.on::after { left: 21px; }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 20px;
+    font-size: 13px; font-weight: 600;
+    z-index: 300;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: var(--shadow);
+  }
+  #toast.show { opacity: 1; }
+
+  /* ── SYNC INDICATOR ── */
+  #syncDot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  #syncDot.syncing { background: var(--orange); animation: pulse 1s infinite; }
+  #syncDot.offline { background: var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── RECYCLE BIN ── */
+  .deleted-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 10px;
+    opacity: 0.7;
+  }
+  .deleted-actions { display: flex; gap: 8px; margin-top: 10px; }
+
+  /* ── WORKER VIEW (own trucks) ── */
+  .worker-view-header {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin: 12px 16px;
+  }
+  .wv-name { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .wv-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+  .wv-stat { text-align: center; }
+  .wv-stat-num { font-size: 18px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .wv-stat-label { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+  .online-badge {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px; color: var(--text2);
+  }
+
+  /* ── ASSIGN SECTION ── */
+  .assign-section {
+    background: rgba(168,85,247,0.08);
+    border: 1px solid rgba(168,85,247,0.2);
+    border-radius: var(--radius);
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  .assign-title { font-size: 11px; font-weight: 700; color: var(--purple); letter-spacing: 0.05em; margin-bottom: 8px; }
+  /* ── SPLASH SCREEN ── */
+  #splashScreen {
+    position: fixed; inset: 0; z-index: 999;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: #0f1623;
+    transition: opacity 0.6s ease;
+  }
+  #splashScreen.hide { opacity: 0; pointer-events: none; }
+  .splash-img {
+    width: 100%; height: 100%;
+    position: absolute; inset: 0;
+    object-fit: cover; opacity: 0.35;
+  }
+  .splash-content {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 16px;
+  }
+  .splash-icon { border-radius: 24%; box-shadow: 0 16px 48px rgba(0,0,0,0.7); }
+  .splash-title { font-size: 28px; font-weight: 700; color: #fff; letter-spacing: 0.05em; }
+  .splash-sub { font-size: 14px; color: rgba(255,255,255,0.6); }
+  .splash-loader {
+    width: 40px; height: 4px; background: rgba(255,255,255,0.2);
+    border-radius: 2px; overflow: hidden; margin-top: 8px;
+  }
+  .splash-loader-bar {
+    height: 100%; width: 0%; background: #6DD5ED;
+    border-radius: 2px; animation: loadBar 1.8s ease forwards;
+  }
+  @keyframes loadBar { 0%{width:0%} 60%{width:70%} 100%{width:100%} }
+</style>
+</head>
+<body>
+
+<!-- SPLASH SCREEN -->
+<div id="splashScreen">
+  <img class="splash-img" id="splashImg" src="splash.jpg" alt="">
+  <div class="splash-content">
+    <canvas class="splash-icon" id="splashIcon" width="100" height="100"></canvas>
+    <div class="splash-title">WKABE</div>
+    <div class="splash-sub">Hask Services — Djibouti</div>
+    <div style="background:#f59e0b;color:#000;font-size:11px;font-weight:800;padding:4px 14px;border-radius:20px;letter-spacing:0.1em">🧪 TEST MODE</div>
+    <div class="splash-loader"><div class="splash-loader-bar"></div></div>
+  </div>
+</div>
+
+<!-- TEST BANNER -->
+<div style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#f59e0b;color:#000;text-align:center;font-size:11px;font-weight:800;padding:3px;letter-spacing:0.08em">🧪 TEST MODE — Data goes to test database only</div>
+<div style="height:22px;background:var(--bg)"></div>
+
+<div id="loginScreen" class="screen active">
+  <canvas id="loginLogo" width="72" height="72" style="border-radius:20%;margin-bottom:12px;box-shadow:0 8px 32px rgba(0,0,0,0.5)"></canvas>
+  <div class="login-title">WKABE</div>
+  <div class="login-sub">Hask Services — Djibouti</div>
+  <div class="login-grid" id="loginGrid"></div>
+</div>
+
+<!-- PIN SCREEN -->
+<div id="pinScreen" class="screen">
+  <div class="pin-avatar" id="pinAvatar"></div>
+  <div class="pin-name" id="pinName"></div>
+  <div class="pin-role" id="pinRole"></div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="d0"></div>
+    <div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div>
+    <div class="pin-dot" id="d3"></div>
+  </div>
+  <div class="pin-keypad">
+    <button class="pin-key" onclick="pinKey('1')">1</button>
+    <button class="pin-key" onclick="pinKey('2')">2</button>
+    <button class="pin-key" onclick="pinKey('3')">3</button>
+    <button class="pin-key" onclick="pinKey('4')">4</button>
+    <button class="pin-key" onclick="pinKey('5')">5</button>
+    <button class="pin-key" onclick="pinKey('6')">6</button>
+    <button class="pin-key" onclick="pinKey('7')">7</button>
+    <button class="pin-key" onclick="pinKey('8')">8</button>
+    <button class="pin-key" onclick="pinKey('9')">9</button>
+    <button class="pin-key back back-btn" onclick="goLogin()">← Back</button>
+    <button class="pin-key" onclick="pinKey('0')">0</button>
+    <button class="pin-key back" onclick="pinDel()">⌫</button>
+  </div>
+  <div class="pin-error" id="pinError"></div>
+</div>
+
+<!-- MAIN APP SCREEN -->
+<div id="appScreen" class="screen">
+  <!-- HEADER -->
+  <div class="app-header">
+    <div class="header-left">
+      <div class="header-logo">HSK</div>
+      <div>
+        <div class="header-title" id="headerTitle">Hask Tracker</div>
+        <div class="header-sub" id="headerSub">Hask Services</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="online-badge"><div id="syncDot"></div><span id="syncLabel">Live</span></div>
+      <span class="role-badge" id="roleBadge">ADMIN</span>
+      <button class="add-btn" id="headerAddBtn" onclick="openAddTruck()">+ Add</button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content" id="mainContent">
+    <!-- Trucks Tab -->
+    <div id="tabTrucks">
+      <div class="stats-bar">
+        <div class="stat-card"><div class="stat-num blue" id="statTotal">0</div><div class="stat-label">TRUCKS</div></div>
+        <div class="stat-card"><div class="stat-num green" id="statPaid">0</div><div class="stat-label">PAID</div></div>
+        <div class="stat-card"><div class="stat-num orange" id="statPartial">0</div><div class="stat-label">PARTIAL</div></div>
+        <div class="stat-card"><div class="stat-num red" id="statUnpaid">0</div><div class="stat-label">UNPAID</div></div>
+        <div class="stat-card"><div class="stat-num teal" id="statETB">0.0k</div><div class="stat-label">ETB</div></div>
+      </div>
+      <div class="date-bar">
+        <button class="date-chip" onclick="setToday()">🟢 Today</button>
+        <div class="date-input-wrap">
+          <span style="color:var(--text3);font-size:13px;">📅</span>
+          <input type="date" id="dateFilter" onchange="renderTrucks()">
+        </div>
+      </div>
+      <div class="filter-bar">
+        <button class="filter-chip active" onclick="setFilter('all',this)">All</button>
+        <button class="filter-chip" onclick="setFilter('paid',this)">✅ Paid</button>
+        <button class="filter-chip" onclick="setFilter('partial',this)">⚡ Partial</button>
+        <button class="filter-chip" onclick="setFilter('unpaid',this)">❌ Unpaid</button>
+      </div>
+      <div class="worker-bar" id="workerFilterBar"></div>
+      <div class="section-header">
+        <span class="section-title" id="trucksSectionTitle">TODAY'S TRUCKS</span>
+        <button class="new-btn" onclick="openAddTruck()">+ New</button>
+      </div>
+      <div id="assignSection" class="assign-section" style="margin:0 16px 10px; display:none;">
+        <div class="assign-title">⏳ WAITING FOR WORKER</div>
+        <div id="unassignedList"></div>
+      </div>
+      <div class="trucks-list" id="trucksList"></div>
+    </div>
+
+    <!-- Workers Tab -->
+    <div id="tabWorkers" style="display:none;">
+      <div class="workers-list" id="workersList"></div>
+    </div>
+
+    <!-- Advances Tab -->
+    <div id="tabAdvances" style="display:none;">
+      <div class="section-header" style="padding-top:16px;">
+        <span class="section-title">ALL CREDIT RECORDS</span>
+        <button class="new-btn" onclick="openAddAdvance()">+ Add</button>
+      </div>
+      <div class="advances-list" id="advancesList"></div>
+    </div>
+
+    <!-- Reports Tab -->
+    <div id="tabReports" style="display:none;">
+      <div class="reports-content" id="reportsContent"></div>
+    </div>
+
+    <!-- Manage Tab -->
+    <div id="tabManage" style="display:none;">
+      <div class="manage-content" id="manageContent"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav" id="bottomNav"></div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modalTruck">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="truckModalTitle">🚛 Add Truck</div>
+    <div class="form-group">
+      <label class="form-label">PLATE NUMBER</label>
+      <input class="form-input" id="truckPlate" placeholder="e.g. DJ 1234 AB" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label">DATE</label>
+      <input class="form-input" type="date" id="truckDate">
+    </div>
+    <div class="form-group" id="workerGroup">
+      <label class="form-label">WORKER</label>
+      <select class="form-select" id="truckWorker"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">PAYMENT STATUS</label>
+      <div class="radio-group" id="statusRadio"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">NOTES (optional)</label>
+      <input class="form-input" id="truckNotes" placeholder="Optional notes...">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modalTruck')">Cancel</button>
+      <button class="btn-primary" onclick="saveTruck()">Save Truck</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalAdvance">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">💰 Add Advance</div>
+    <div class="form-group">
+      <label class="form-label">WORKER</label>
+      <select class="form-select" id="advWorker"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">AMOUNT (ETB)</label>
+      <input class="form-input" type="number" id="advAmount" placeholder="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">DATE</label>
+      <input class="form-input" type="date" id="advDate">
+    </div>
+    <div class="form-group">
+      <label class="form-label">REASON (optional)</label>
+      <input class="form-input" id="advReason" placeholder="Optional reason...">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modalAdvance')">Cancel</button>
+      <button class="btn-primary" onclick="saveAdvance()">Save Advance</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalStatus">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">💳 Change Payment Status</div>
+    <div class="radio-group" id="statusChangeRadio"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modalStatus')">Cancel</button>
+      <button class="btn-primary" onclick="saveStatus()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalAssign">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">👷 Assign Worker</div>
+    <div class="form-group">
+      <label class="form-label">SELECT WORKER</label>
+      <select class="form-select" id="assignWorker"></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modalAssign')">Cancel</button>
+      <button class="btn-primary" onclick="doAssign()">✅ Assign Worker</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalPin">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="pinModalTitle">🔐 Change PIN</div>
+    <div class="form-group">
+      <label class="form-label">NEW PIN (4 digits)</label>
+      <input class="form-input" type="password" id="newPin" placeholder="••••" maxlength="4" inputmode="numeric">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modalPin')">Cancel</button>
+      <button class="btn-primary" onclick="savePin()">Save PIN</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalPerms">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="permsModalTitle">⚙️ Permissions</div>
+    <div id="permsContent"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modalPerms')">Cancel</button>
+      <button class="btn-primary" onclick="savePerms()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalRecycle">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🗑️ Recycle Bin</div>
+    <div id="recycleList"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modalRecycle')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalAddWorker">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">👷 Add Worker</div>
+    <div class="form-group">
+      <label class="form-label">WORKER NAME</label>
+      <input class="form-input" id="newWorkerName" placeholder="Full name">
+    </div>
+    <div class="form-group">
+      <label class="form-label">PIN (4 digits)</label>
+      <input class="form-input" type="password" id="newWorkerPin" placeholder="••••" maxlength="4" inputmode="numeric">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modalAddWorker')">Cancel</button>
+      <button class="btn-primary" onclick="saveNewWorker()">Add Worker</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- FIREBASE SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getDatabase, ref, set, push, onValue, remove, update, get
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ── FIREBASE CONFIG ──
+const firebaseConfig = {
+  apiKey: "AIzaSyAm53cHvVtoiJY1n2Zr1Jqb4igbpnWpKbY",
+  authDomain: "hask-oli-test.firebaseapp.com",
+  databaseURL: "https://hask-oli-test-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "hask-oli-test",
+  storageBucket: "hask-oli-test.firebasestorage.app",
+  messagingSenderId: "852441328531",
+  appId: "1:852441328531:web:458d0f53405adce3219666",
+  measurementId: "G-44CST8DGSE"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// ── STATE ──
+let trucks = {};
+let advances = {};
+let deletedTrucks = {};
+let currentUser = null;
+let filterStatus = 'all';
+let filterWorker = 'all';
+let editingTruckId = null;
+let editingStatusId = null;
+let editingAssignId = null;
+let pinChangingUser = null;
+let permsEditingUser = null;
+let currentTab = 'trucks';
+let currentLang = localStorage.getItem('hask_lang') || 'en';
+
+// ── DEFAULT SETTINGS ──
+const DEFAULT_PINS = {
+  admin: '1234',
+  cashier1: '1111',
+  cashier2: '2222',
+  Ahmed: '3333',
+  Radwan: '4444',
+  Oli: '5555',
+  Ali: '6666',
+  Omar: '7777'
+};
+const DEFAULT_WORKERS = ['Ahmed','Radwan','Oli','Ali','Omar'];
+const WORKER_COLORS = {
+  Ahmed: '#3b82f6', Radwan: '#22c55e', Oli: '#f59e0b',
+  Ali: '#ef4444', Omar: '#a855f7'
+};
+const CLIENT_PRICE = 5500;
+const WORKER_PAY = { paid: 1300, partial: 700, unpaid: 0 };
+
+// ── TRANSLATIONS ──
+const T = {
+  en: {
+    trucks:'Trucks', workers:'Workers', advances:'Advances', reports:'Reports', manage:'Manage',
+    addTruck:'Add Truck', today:'Today', allTrucks:'All Trucks',
+    noTrucks:'No trucks found', paid:'Paid', partial:'Partial', unpaid:'Unpaid',
+    assign:'Assign', changeStatus:'Change Status', delete:'Delete',
+    earnings:'Earnings', advances_:'Advances', balance:'Balance',
+    totalEarned:'Total Earned', totalAdvances:'Total Advances',
+    netBalance:'Net Balance', trucksWorked:'Trucks Worked',
+    fullView:'Admin — Full View', cashierView:'Cashier View',
+    myTrucks:'My Trucks', myEarnings:'My Earnings',
+    logout:'Logout', language:'Language',
+    recycleBin:'Recycle Bin', clearData:'Clear All Data',
+    adminPin:'Admin PIN', cashierPerms:'Cashier Permissions',
+    workerPerms:'Worker Permissions', changePin:'Change PIN',
+    addAdvance:'Add Advance', addWorker:'Add Worker',
+    save:'Save', cancel:'Cancel', back:'Back',
+    waitingWorker:'Waiting for Worker',
+    workerPending:'Paid — Worker Pending',
+  },
+  fr: {
+    trucks:'Camions', workers:'Chauffeurs', advances:'Avances', reports:'Rapports', manage:'Gérer',
+    addTruck:'Ajouter Camion', today:"Aujourd'hui", allTrucks:'Tous les Camions',
+    noTrucks:'Aucun camion trouvé', paid:'Payé', partial:'Partiel', unpaid:'Impayé',
+    assign:'Assigner', changeStatus:'Changer Statut', delete:'Supprimer',
+    earnings:'Gains', advances_:'Avances', balance:'Solde',
+    totalEarned:'Total Gagné', totalAdvances:'Total Avances',
+    netBalance:'Solde Net', trucksWorked:'Camions Travaillés',
+    fullView:'Admin — Vue complète', cashierView:'Vue Caissier',
+    myTrucks:'Mes Camions', myEarnings:'Mes Gains',
+    logout:'Déconnexion', language:'Langue',
+    recycleBin:'Corbeille', clearData:'Effacer Données',
+    adminPin:'PIN Admin', cashierPerms:'Permissions Caissier',
+    workerPerms:'Permissions Travailleur', changePin:'Changer PIN',
+    addAdvance:'Ajouter Avance', addWorker:'Ajouter Travailleur',
+    save:'Enregistrer', cancel:'Annuler', back:'Retour',
+    waitingWorker:'En attente de travailleur',
+    workerPending:'Payé — Travailleur en attente',
+  },
+  so: {
+    trucks:'Baabuurta', workers:'Shaqaalaha', advances:'Amaahda', reports:'Warbixinta', manage:'Maamul',
+    addTruck:'Kudar Baabuur', today:'Maanta', allTrucks:'Dhammaan Baabuurta',
+    noTrucks:'Baabuur lama helin', paid:'La bixiyay', partial:'Qayb', unpaid:'Aan la bixin',
+    assign:'U xil saar', changeStatus:'Beddel xaalada', delete:'Tirtir',
+    earnings:'Lacag', advances_:'Amaah', balance:'Dheefshiil',
+    totalEarned:'Wadarta lacagta', totalAdvances:'Wadarta amaahda',
+    netBalance:'Dheefshiilka', trucksWorked:'Baabuurta la shaqeeyay',
+    fullView:'Admin — Muuqaal buuxa', cashierView:'Aragtida Kaashiyeerka',
+    myTrucks:'Baabuuradayda', myEarnings:'Lacagtayda',
+    logout:'Ka bax', language:'Luqadda',
+    recycleBin:'Xabadka', clearData:'Naadi Xogta',
+    adminPin:'PIN Admin', cashierPerms:'Fasaxyada Kaashiyeerka',
+    workerPerms:'Fasaxyada Shaqaalaha', changePin:'Beddel PIN',
+    addAdvance:'Kudar Amaah', addWorker:'Kudar Shaqaale',
+    save:'Keydi', cancel:'Jooji', back:'Dib u noqo',
+    waitingWorker:'Sugaya shaqaalaha',
+    workerPending:'La bixiyay — Shaqaalaha sugaya',
+  }
+};
+const t = k => (T[currentLang]||T.en)[k] || k;
+
+// ── PIN MANAGEMENT (localStorage) ──
+function getPins() {
+  try { return JSON.parse(localStorage.getItem('hask_pins')) || {}; } catch { return {}; }
+}
+function savePins(pins) { localStorage.setItem('hask_pins', JSON.stringify(pins)); }
+function getPin(user) { return getPins()[user] || DEFAULT_PINS[user] || '0000'; }
+function setPin(user, pin) { const p=getPins(); p[user]=pin; savePins(p); }
+
+// ── PERMISSIONS (localStorage) ──
+function getPerms() {
+  try { return JSON.parse(localStorage.getItem('hask_perms')) || {}; } catch { return {}; }
+}
+function savePermsData(p) { localStorage.setItem('hask_perms', JSON.stringify(p)); }
+function getUserPerms(user) {
+  const all = getPerms();
+  if (all[user]) return all[user];
+  if (user==='cashier1'||user==='cashier2') return {addTrucks:true,addAdvances:true,editStatus:true,deleteTrucks:false};
+  if (DEFAULT_WORKERS.includes(user)) return {canAddOwnTrucks:false};
+  return {};
+}
+function setUserPerms(user, p) { const all=getPerms(); all[user]=p; savePermsData(all); }
+
+// ── WORKERS LIST (from localStorage, extendable) ──
+function getWorkerList() {
+  try { return JSON.parse(localStorage.getItem('hask_workers')) || DEFAULT_WORKERS; } catch { return DEFAULT_WORKERS; }
+}
+function saveWorkerList(w) { localStorage.setItem('hask_workers', JSON.stringify(w)); }
+
+// ── FIREBASE LISTENERS ──
+function initFirebase() {
+  setSyncing();
+  onValue(ref(db,'trucks'), snap => {
+    trucks = snap.val() || {};
+    renderTrucks();
+    renderWorkers();
+    renderReports();
+    setOnline();
+  }, err => { setOffline(); });
+
+  onValue(ref(db,'advances'), snap => {
+    advances = snap.val() || {};
+    renderAdvances();
+    renderWorkers();
+  });
+
+  onValue(ref(db,'deleted'), snap => {
+    deletedTrucks = snap.val() || {};
+  });
+}
+
+function setSyncing() {
+  document.getElementById('syncDot').className='syncing';
+  document.getElementById('syncLabel').textContent='Syncing...';
+}
+function setOnline() {
+  document.getElementById('syncDot').className='';
+  document.getElementById('syncLabel').textContent='Live';
+}
+function setOffline() {
+  document.getElementById('syncDot').className='offline';
+  document.getElementById('syncLabel').textContent='Offline';
+}
+
+// ── LOGIN ──
+function buildLogin() {
+  const workers = getWorkerList();
+  const grid = document.getElementById('loginGrid');
+  const users = [
+    {id:'admin', label:'Admin', role:'Full access', icon:'👑', color:'#a855f7'},
+    {id:'cashier1', label:'Cashier 1', role:'Cashier', icon:'💼', color:'#3b82f6'},
+    {id:'cashier2', label:'Cashier 2', role:'Cashier', icon:'💼', color:'#14b8a6'},
+    ...workers.map(w => ({
+      id:w, label:w, role:'Worker · My trucks only',
+      icon: w.substring(0,2).toUpperCase(), color: WORKER_COLORS[w]||'#6b7280'
+    }))
+  ];
+
+  grid.innerHTML = users.map((u,i) => `
+    <button class="login-btn${i===0?' admin-btn':''}" onclick="goPin('${u.id}')">
+      <div class="avatar" style="background:${u.color}22;color:${u.color};border:2px solid ${u.color}44">
+        ${u.icon}
+      </div>
+      <div class="role-name">${u.label}</div>
+      <div class="role-label">${u.role}</div>
+    </button>
+  `).join('');
+}
+
+window.goPin = function(userId) {
+  currentUser = {id: userId};
+  const workers = getWorkerList();
+  let name = userId, role = 'Worker', color = WORKER_COLORS[userId]||'#6b7280';
+  if (userId==='admin') { name='Admin'; role='Full Access'; color='#a855f7'; }
+  else if (userId==='cashier1') { name='Cashier 1'; role='Cashier'; color='#3b82f6'; }
+  else if (userId==='cashier2') { name='Cashier 2'; role='Cashier'; color='#14b8a6'; }
+
+  document.getElementById('pinAvatar').textContent = userId==='admin'?'👑':userId.startsWith('cashier')?'💼':userId.substring(0,2).toUpperCase();
+  document.getElementById('pinAvatar').style.background = color+'22';
+  document.getElementById('pinAvatar').style.color = color;
+  document.getElementById('pinAvatar').style.border = `2px solid ${color}44`;
+  document.getElementById('pinName').textContent = name;
+  document.getElementById('pinRole').textContent = role;
+  pinEntry = '';
+  updatePinDots();
+  document.getElementById('pinError').textContent = '';
+  showScreen('pinScreen');
+}
+
+let pinEntry = '';
+window.pinKey = function(k) {
+  if (pinEntry.length >= 4) return;
+  pinEntry += k;
+  updatePinDots();
+  if (pinEntry.length === 4) setTimeout(checkPin, 100);
+}
+window.pinDel = function() { pinEntry = pinEntry.slice(0,-1); updatePinDots(); }
+function updatePinDots() {
+  for (let i=0;i<4;i++) {
+    document.getElementById('d'+i).className = 'pin-dot'+(i<pinEntry.length?' filled':'');
+  }
+}
+function checkPin() {
+  if (pinEntry === getPin(currentUser.id)) {
+    loginSuccess();
+  } else {
+    document.getElementById('pinError').textContent = '❌ Wrong PIN';
+    pinEntry=''; updatePinDots();
+    setTimeout(()=>document.getElementById('pinError').textContent='', 1500);
+  }
+}
+
+window.goLogin = function() { showScreen('loginScreen'); pinEntry=''; }
+
+function loginSuccess() {
+  const id = currentUser.id;
+  const workers = getWorkerList();
+  if (id==='admin') {
+    currentUser = {id, name:'Admin', role:'admin', color:'#a855f7'};
+  } else if (id==='cashier1') {
+    currentUser = {id, name:'Cashier 1', role:'cashier', color:'#3b82f6'};
+  } else if (id==='cashier2') {
+    currentUser = {id, name:'Cashier 2', role:'cashier', color:'#14b8a6'};
+  } else if (workers.includes(id)) {
+    currentUser = {id, name:id, role:'worker', color:WORKER_COLORS[id]||'#6b7280'};
+  }
+  buildApp();
+  initFirebase();
+  showScreen('appScreen');
+}
+
+// ── BUILD APP ──
+function buildApp() {
+  const role = currentUser.role;
+  const id = currentUser.id;
+
+  // Header
+  document.getElementById('headerTitle').textContent =
+    role==='admin' ? t('allTrucks') :
+    role==='cashier' ? t('trucks') :
+    t('myTrucks');
+  document.getElementById('headerSub').textContent =
+    role==='admin' ? t('fullView') :
+    role==='cashier' ? t('cashierView') :
+    'Hask Services';
+  const rb = document.getElementById('roleBadge');
+  rb.textContent = role.toUpperCase();
+  rb.className = 'role-badge ' + role;
+
+  // Show/hide add button
+  const perms = getUserPerms(id);
+  const canAdd = role==='admin' || (role==='cashier' && perms.addTrucks) || (role==='worker' && perms.canAddOwnTrucks);
+  document.getElementById('headerAddBtn').style.display = canAdd ? '' : 'none';
+
+  // Bottom nav
+  buildNav();
+
+  // Date
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('dateFilter').value = today;
+
+  // Worker filter bar
+  buildWorkerFilterBar();
+
+  switchTab('trucks');
+}
+
+function buildNav() {
+  const role = currentUser.role;
+  const nav = document.getElementById('bottomNav');
+  let tabs = [];
+  if (role==='admin') tabs = [
+    {id:'trucks', icon:'🚛', label:t('trucks')},
+    {id:'workers', icon:'👷', label:t('workers')},
+    {id:'advances', icon:'💸', label:t('advances')},
+    {id:'reports', icon:'📊', label:t('reports')},
+    {id:'manage', icon:'⚙️', label:t('manage')},
+  ];
+  else if (role==='cashier') {
+    const p = getUserPerms(currentUser.id);
+    tabs = [{id:'trucks', icon:'🚛', label:t('trucks')}];
+    tabs.push({id:'workers', icon:'👷', label:t('workers')});
+    if (p.addAdvances) tabs.push({id:'advances', icon:'💸', label:t('advances')});
+    tabs.push({id:'reports', icon:'📊', label:t('reports')});
+    tabs.push({id:'logout', icon:'🚪', label:t('logout')});
+  } else {
+    tabs = [
+      {id:'trucks', icon:'🚛', label:t('myTrucks')},
+      {id:'earnings', icon:'💰', label:t('myEarnings')},
+      {id:'logout', icon:'🚪', label:t('logout')},
+    ];
+  }
+  nav.innerHTML = tabs.map(t => `
+    <button class="nav-btn${t.id==='trucks'?' active':''}" id="nav_${t.id}" onclick="switchTab('${t.id}')">
+      <div class="nav-icon">${t.icon}</div>
+      <div class="nav-label">${t.label}</div>
+    </button>
+  `).join('');
+}
+
+window.switchTab = function(tab) {
+  if (tab==='logout') { goLogin(); return; }
+  if (tab==='earnings') { tab='workers'; }
+  currentTab = tab;
+
+  // Update nav
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const nb = document.getElementById('nav_'+tab);
+  if (nb) nb.classList.add('active');
+
+  // Show/hide tabs
+  ['Trucks','Workers','Advances','Reports','Manage'].forEach(t => {
+    const el = document.getElementById('tab'+t);
+    if (el) el.style.display = (tab===t.toLowerCase()) ? '' : 'none';
+  });
+
+  // Render
+  if (tab==='workers') renderWorkers();
+  if (tab==='advances') renderAdvances();
+  if (tab==='reports') renderReports();
+  if (tab==='manage') renderManage();
+  if (tab==='trucks') renderTrucks();
+}
+
+// ── TODAY / DATE ──
+window.setToday = function() {
+  document.getElementById('dateFilter').value = new Date().toISOString().split('T')[0];
+  renderTrucks();
+}
+window.setFilter = function(f, el) {
+  filterStatus = f;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderTrucks();
+}
+function buildWorkerFilterBar() {
+  const workers = getWorkerList();
+  const bar = document.getElementById('workerFilterBar');
+  bar.innerHTML = `
+    <button class="worker-chip active" id="wchip_all" onclick="setWorkerFilter('all',this)">
+      <div class="wdot" style="background:var(--accent)"></div>
+      👥 All <span class="wcount" id="wcount_all">0</span>
+    </button>
+    ${workers.map(w=>`
+      <button class="worker-chip" id="wchip_${w}" onclick="setWorkerFilter('${w}',this)"
+        style="border-color:${WORKER_COLORS[w]||'#6b7280'}44">
+        <div class="wdot" style="background:${WORKER_COLORS[w]||'#6b7280'}"></div>
+        ${w} <span class="wcount" id="wcount_${w}">0</span>
+      </button>
+    `).join('')}
+  `;
+}
+window.setWorkerFilter = function(w, el) {
+  filterWorker = w;
+  document.querySelectorAll('.worker-chip').forEach(c=>{c.classList.remove('active');c.style.color='';});
+  el.classList.add('active');
+  if (w!=='all') el.style.color = WORKER_COLORS[w]||'var(--accent)';
+  renderTrucks();
+}
+
+// ── RENDER TRUCKS ──
+function renderTrucks() {
+  const date = document.getElementById('dateFilter')?.value;
+  const today = new Date().toISOString().split('T')[0];
+  const isToday = date === today;
+  const role = currentUser.role;
+  const id = currentUser.id;
+
+  // Filter trucks
+  let list = Object.entries(trucks).map(([k,v])=>({...v,_id:k}));
+
+  // Worker only sees own trucks
+  if (role==='worker') list = list.filter(t=>t.worker===id);
+
+  // Date filter
+  if (date) list = list.filter(t=>t.date===date);
+
+  // Status filter
+  if (filterStatus!=='all') list = list.filter(t=>t.status===filterStatus);
+
+  // Worker filter
+  if (filterWorker!=='all') list = list.filter(t=>t.worker===filterWorker);
+
+  // Sort newest first
+  list.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+
+  // Stats
+  const allForDate = Object.values(trucks).filter(t=>{
+    if (role==='worker') return t.worker===id && t.date===date;
+    return t.date===date;
+  });
+  document.getElementById('statTotal').textContent = allForDate.length;
+  document.getElementById('statPaid').textContent = allForDate.filter(t=>t.status==='paid').length;
+  document.getElementById('statPartial').textContent = allForDate.filter(t=>t.status==='partial').length;
+  document.getElementById('statUnpaid').textContent = allForDate.filter(t=>t.status==='unpaid'||t.status==='pending').length;
+  const earn = allForDate.reduce((s,t)=>s+(t.status==='paid'?CLIENT_PRICE:t.status==='partial'?2800:0),0);
+  document.getElementById('statETB').textContent = earn>=1000 ? (earn/1000).toFixed(1)+'k' : earn;
+
+  // Worker counts
+  const workers = getWorkerList();
+  const allDate = Object.values(trucks).filter(t=>t.date===date);
+  document.getElementById('wcount_all').textContent = allDate.length;
+  workers.forEach(w=>{
+    const el = document.getElementById('wcount_'+w);
+    if (el) el.textContent = allDate.filter(t=>t.worker===w).length;
+  });
+
+  // Section title
+  const stEl = document.getElementById('trucksSectionTitle');
+  if (stEl) stEl.textContent = isToday ? "TODAY'S TRUCKS" : `HISTORY — ${date}`;
+
+  // Hide/show add buttons based on whether date is today
+  const headerAddBtn = document.getElementById('headerAddBtn');
+  const newBtn = document.querySelector('.new-btn');
+  const perms2 = getUserPerms(id);
+  const canAdd = role==='admin' || (role==='cashier' && perms2.addTrucks) || (role==='worker' && perms2.canAddOwnTrucks);
+  if (headerAddBtn) headerAddBtn.style.display = (canAdd && isToday) ? '' : 'none';
+  if (newBtn) newBtn.style.display = (canAdd && isToday) ? '' : 'none';
+
+  // Unassigned (admin/cashier only)
+  const unassigned = role!=='worker' ? list.filter(t=>!t.worker||t.worker==='') : [];
+  const assignSec = document.getElementById('assignSection');
+  const unList = document.getElementById('unassignedList');
+  if (assignSec && unList) {
+    if (unassigned.length > 0 && role!=='worker') {
+      assignSec.style.display = '';
+      unList.innerHTML = unassigned.map(t=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+          <span style="font-family:'JetBrains Mono',monospace;font-weight:600">${t.plate}</span>
+          <button class="truck-action-btn primary" style="flex:none;padding:5px 12px;font-size:11px"
+            onclick="openAssign('${t._id}')">👷 ${t('assign')}</button>
+        </div>
+      `).join('');
+    } else {
+      assignSec.style.display = 'none';
+    }
+  }
+
+  // Render list (exclude unassigned from main list)
+  const assigned = role==='worker' ? list : list.filter(t=>t.worker && t.worker!=='');
+  const container = document.getElementById('trucksList');
+  if (!container) return;
+
+  if (assigned.length===0) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">${isToday?'🚛':'📅'}</div><p>${isToday?t('noTrucks'):'No trucks on this date'}</p></div>`;
+    return;
+  }
+
+  // Show history notice for past dates
+  const historyNotice = !isToday ? `
+    <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:10px;font-size:12px;color:var(--orange);display:flex;align-items:center;gap:8px">
+      📅 <span>Viewing history — ${date}. Read-only, no changes allowed.</span>
+    </div>
+  ` : '';
+
+  const perms = getUserPerms(id);
+  const canEditStatus = isToday && (role==='admin' || (role==='cashier' && perms.editStatus));
+  const canDelete = isToday && (role==='admin' || (role==='cashier' && perms.deleteTrucks));
+  const canEdit = isToday && (role==='admin' || (role==='cashier' && perms.addTrucks));
+
+  container.innerHTML = historyNotice + assigned.map(truck=>{
+    const statusClass = truck.status==='paid'?'paid':truck.status==='partial'?'partial':truck.status==='pending'?'pending':'unpaid';
+    const statusLabel = truck.status==='paid'?'✅ Paid':truck.status==='partial'?'⚡ Partial':truck.status==='pending'?'🟡 Pending':'❌ Unpaid';
+    const workerColor = WORKER_COLORS[truck.worker]||'#6b7280';
+    const workerEarn = WORKER_PAY[truck.status]||0;
+    const totalFare = truck.status==='paid'?CLIENT_PRICE:truck.status==='partial'?2800:0;
+    const company = totalFare - workerEarn;
+    const dateStr = truck.timestamp ? new Date(truck.timestamp).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : truck.date;
+
+    let actions = '';
+    if (canEditStatus) actions += `<button class="truck-action-btn primary" onclick="openStatus('${truck._id}')">🟡 Status</button>`;
+    if (canEdit) actions += `<button class="truck-action-btn" onclick="openEditTruck('${truck._id}')">✏️ Edit</button>`;
+    if (canDelete) actions += `<button class="truck-action-btn danger" onclick="deleteTruck('${truck._id}')">🗑️ Delete</button>`;
+
+    return `
+      <div class="truck-card ${statusClass}">
+        <div class="truck-top">
+          <div class="truck-plate">${truck.plate}</div>
+          <span class="status-badge ${statusClass}">${statusLabel}</span>
+        </div>
+        <div class="truck-meta">
+          <span>📅 ${dateStr}</span>
+          ${truck.addedBy ? ` · Added by: ${truck.addedBy}` : ''}
+        </div>
+        ${truck.notes ? `<div class="truck-meta">📝 ${truck.notes}</div>` : ''}
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0;padding:10px;background:var(--bg3);border-radius:var(--radius-sm)">
+          <div style="text-align:center">
+            <div style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:0.05em;margin-bottom:4px">WORKER</div>
+            <div style="font-size:12px;font-weight:700;color:${workerColor}">${truck.worker||'—'}</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:0.05em;margin-bottom:4px">TOTAL FARE</div>
+            <div style="font-size:12px;font-weight:700;color:var(--orange)">${totalFare>0?totalFare.toLocaleString()+' ETB':'—'}</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:0.05em;margin-bottom:4px">WORKER GETS</div>
+            <div style="font-size:12px;font-weight:700;color:var(--teal)">${workerEarn>0?workerEarn.toLocaleString()+' ETB':'—'}</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:0.05em;margin-bottom:4px">COMPANY</div>
+            <div style="font-size:12px;font-weight:700;color:var(--accent)">${company>0?company.toLocaleString()+' ETB':'—'}</div>
+          </div>
+        </div>
+        ${actions ? `<div class="truck-actions">${actions}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+// ── EDIT TRUCK ──
+window.openEditTruck = function(id) {
+  editingTruckId = id;
+  const truck = trucks[id];
+  if (!truck) return;
+  document.getElementById('truckModalTitle').textContent = '✏️ Edit Truck';
+  document.getElementById('truckPlate').value = truck.plate||'';
+  document.getElementById('truckDate').value = truck.date||'';
+  document.getElementById('truckNotes').value = truck.notes||'';
+  const workers = getWorkerList();
+  const sel = document.getElementById('truckWorker');
+  sel.innerHTML = `<option value="">— Unassigned —</option>${workers.map(w=>`<option value="${w}">${w}</option>`).join('')}`;
+  sel.value = truck.worker||'';
+  document.getElementById('workerGroup').style.display = currentUser.role==='worker' ? 'none' : '';
+  buildStatusRadio('statusRadio', truck.status||'unpaid');
+  openModal('modalTruck');
+}
+
+// ── ADD TRUCK ──
+window.openAddTruck = function() {
+  editingTruckId = null;
+  document.getElementById('truckModalTitle').textContent = '🚛 '+t('addTruck');
+  document.getElementById('truckPlate').value = '';
+  document.getElementById('truckDate').value = document.getElementById('dateFilter').value;
+  document.getElementById('truckNotes').value = '';
+
+  const workers = getWorkerList();
+  const sel = document.getElementById('truckWorker');
+  sel.innerHTML = `<option value="">— Unassigned —</option>${workers.map(w=>`<option value="${w}">${w}</option>`).join('')}`;
+
+  if (currentUser.role==='worker') {
+    sel.value = currentUser.id;
+    document.getElementById('workerGroup').style.display='none';
+  } else {
+    document.getElementById('workerGroup').style.display='';
+  }
+
+  buildStatusRadio('statusRadio', 'unpaid');
+  openModal('modalTruck');
+}
+function buildStatusRadio(containerId, selected) {
+  const opts = [
+    {val:'unpaid', label:'❌ '+t('unpaid'), sub:'0 ETB to worker'},
+    {val:'partial', label:'⚡ '+t('partial'), sub:'Worker: 700 ETB · Client: 2,800 ETB'},
+    {val:'paid', label:'✅ '+t('paid'), sub:'Worker: 1,300 ETB · Client: 5,500 ETB'},
+    {val:'pending', label:'🟡 '+t('workerPending'), sub:'Worker assignment pending'},
+  ];
+  document.getElementById(containerId).innerHTML = opts.map(o=>`
+    <div class="radio-opt${o.val===selected?' selected':''}" onclick="selectRadio(this,'${containerId}')">
+      <div class="radio-dot"></div>
+      <div class="radio-text">
+        <div class="radio-title">${o.label}</div>
+        <div class="radio-sub">${o.sub}</div>
+      </div>
+      <input type="radio" name="${containerId}" value="${o.val}" ${o.val===selected?'checked':''}>
+    </div>
+  `).join('');
+}
+window.selectRadio = function(el, groupId) {
+  document.querySelectorAll(`#${groupId} .radio-opt`).forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  el.querySelector('input').checked = true;
+}
+function getRadioVal(groupId) {
+  const checked = document.querySelector(`#${groupId} input:checked`);
+  return checked ? checked.value : 'unpaid';
+}
+window.saveTruck = function() {
+  const plate = document.getElementById('truckPlate').value.trim().toUpperCase();
+  const date = document.getElementById('truckDate').value;
+  const worker = document.getElementById('truckWorker').value;
+  const status = getRadioVal('statusRadio');
+  const notes = document.getElementById('truckNotes').value.trim();
+  if (!plate) { showToast('⚠️ Enter plate number'); return; }
+  if (!date) { showToast('⚠️ Select date'); return; }
+
+  // Block adding on past dates
+  const today2 = new Date().toISOString().split('T')[0];
+  if (!editingTruckId && date < today2) {
+    showToast('⚠️ Cannot add trucks for past dates');
+    return;
+  }
+  const duplicate = Object.entries(trucks).find(([k,v])=>
+    v.plate.toUpperCase()===plate && v.date===date && k!==editingTruckId
+  );
+  if (duplicate) {
+    showToast(`⚠️ ${plate} already recorded on ${date}`);
+    return;
+  }
+
+  const data = {
+    plate, date, worker, status, notes,
+    addedBy: currentUser.name || currentUser.id,
+    timestamp: Date.now()
+  };
+
+  if (editingTruckId) {
+    update(ref(db,'trucks/'+editingTruckId), data);
+    showToast('✅ Truck updated');
+  } else {
+    push(ref(db,'trucks'), data);
+    showToast('✅ Truck added');
+  }
+  closeModal('modalTruck');
+}
+
+// ── DELETE TRUCK ──
+window.deleteTruck = function(id) {
+  if (!confirm('Delete this truck? It will go to Recycle Bin.')) return;
+  const truck = trucks[id];
+  if (truck) {
+    set(ref(db,'deleted/'+id), {...truck, deletedAt:Date.now(), deletedBy:currentUser.id});
+  }
+  remove(ref(db,'trucks/'+id));
+  showToast('🗑️ Moved to Recycle Bin');
+}
+
+// ── STATUS ──
+window.openStatus = function(id) {
+  editingStatusId = id;
+  const truck = trucks[id];
+  buildStatusRadio('statusChangeRadio', truck?.status||'unpaid');
+  openModal('modalStatus');
+}
+window.saveStatus = function() {
+  if (!editingStatusId) return;
+  const newStatus = getRadioVal('statusChangeRadio');
+  update(ref(db,'trucks/'+editingStatusId), {status:newStatus});
+  showToast('✅ Status updated');
+  closeModal('modalStatus');
+}
+
+// ── ASSIGN ──
+window.openAssign = function(id) {
+  editingAssignId = id;
+  const workers = getWorkerList();
+  document.getElementById('assignWorker').innerHTML = workers.map(w=>`<option value="${w}">${w}</option>`).join('');
+  const cur = trucks[id]?.worker;
+  if (cur) document.getElementById('assignWorker').value = cur;
+  openModal('modalAssign');
+}
+window.doAssign = function() {
+  if (!editingAssignId) return;
+  const w = document.getElementById('assignWorker').value;
+  update(ref(db,'trucks/'+editingAssignId), {worker:w});
+  showToast(`✅ Assigned to ${w}`);
+  closeModal('modalAssign');
+}
+
+// ── ADVANCES ──
+window.openAddAdvance = function() {
+  const workers = getWorkerList();
+  document.getElementById('advWorker').innerHTML = workers.map(w=>`<option value="${w}">${w}</option>`).join('');
+  document.getElementById('advAmount').value = '';
+  document.getElementById('advDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('advReason').value = '';
+  openModal('modalAdvance');
+}
+window.saveAdvance = function() {
+  const worker = document.getElementById('advWorker').value;
+  const amount = parseFloat(document.getElementById('advAmount').value);
+  const date = document.getElementById('advDate').value;
+  const reason = document.getElementById('advReason').value.trim();
+  if (!worker||!amount||!date) { showToast('⚠️ Fill all required fields'); return; }
+  push(ref(db,'advances'), {worker, amount, date, reason, addedBy:currentUser.id, timestamp:Date.now()});
+  showToast('✅ Advance saved');
+  closeModal('modalAdvance');
+}
+function renderAdvances() {
+  const list = Object.entries(advances).map(([k,v])=>({...v,_id:k}))
+    .sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+  const container = document.getElementById('advancesList');
+  if (!container) return;
+  if (list.length===0) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">💸</div><p>No advances yet</p></div>`;
+    return;
+  }
+  const canDel = currentUser.role==='admin';
+  container.innerHTML = list.map(a=>`
+    <div class="advance-card">
+      <div class="advance-icon">💸</div>
+      <div class="advance-info">
+        <div class="advance-worker">${a.worker}</div>
+        <div class="advance-meta">📅 ${a.date}${a.reason?' · '+a.reason:''}</div>
+      </div>
+      <div class="advance-amount">-${(a.amount||0).toLocaleString()}</div>
+      ${canDel?`<button class="advance-delete" onclick="deleteAdvance('${a._id}')">🗑️</button>`:''}
+    </div>
+  `).join('');
+}
+window.deleteAdvance = function(id) {
+  if (!confirm('Delete this advance?')) return;
+  remove(ref(db,'advances/'+id));
+  showToast('🗑️ Advance deleted');
+}
+
+// ── WORKERS ──
+function renderWorkers() {
+  const container = document.getElementById('workersList');
+  if (!container) return;
+  const workerList = getWorkerList();
+  const role = currentUser.role;
+  const id = currentUser.id;
+  const perms = getUserPerms(id);
+
+  // Workers only see themselves unless seeAllTrucks permission is on
+  const visibleWorkers = role==='worker'
+    ? (perms.seeAllTrucks ? workerList : workerList.filter(w=>w===id))
+    : workerList;
+
+  container.innerHTML = visibleWorkers.map(w=>{
+    const color = WORKER_COLORS[w]||'#6b7280';
+    const wTrucks = Object.values(trucks).filter(t=>t.worker===w);
+    const wAdvances = Object.values(advances).filter(a=>a.worker===w);
+    const earned = wTrucks.reduce((s,t)=>s+(WORKER_PAY[t.status]||0),0);
+    const advTotal = wAdvances.reduce((s,a)=>s+(a.amount||0),0);
+    const net = earned - advTotal;
+
+    return `
+      <div class="worker-card" id="wcard_${w}">
+        <div class="worker-card-header" onclick="toggleWorker('${w}')">
+          <div class="worker-avatar" style="background:${color}22;color:${color};border:2px solid ${color}44">
+            ${w.substring(0,2).toUpperCase()}
+          </div>
+          <div class="worker-info">
+            <div class="worker-name">${w}</div>
+            <div class="worker-stats-row">
+              <div class="worker-stat">Trucks: <span>${wTrucks.length}</span></div>
+              <div class="worker-stat">Earned: <span style="color:var(--green)">${earned.toLocaleString()}</span></div>
+              <div class="worker-stat">Net: <span style="color:${net>=0?'var(--green)':'var(--red)'}">${net.toLocaleString()}</span></div>
+            </div>
+          </div>
+          <div class="expand-icon">▼</div>
+        </div>
+        <div class="worker-details">
+          <div class="detail-row"><span class="detail-label">Trucks worked</span><span class="detail-val">${wTrucks.length}</span></div>
+          <div class="detail-row"><span class="detail-label">Paid trucks</span><span class="detail-val green">${wTrucks.filter(t=>t.status==='paid').length}</span></div>
+          <div class="detail-row"><span class="detail-label">Partial trucks</span><span class="detail-val orange">${wTrucks.filter(t=>t.status==='partial').length}</span></div>
+          <div class="detail-row"><span class="detail-label">Unpaid trucks</span><span class="detail-val red">${wTrucks.filter(t=>t.status==='unpaid'||t.status==='pending').length}</span></div>
+          <div class="detail-row"><span class="detail-label">Total earned</span><span class="detail-val green">${earned.toLocaleString()} ETB</span></div>
+          <div class="detail-row"><span class="detail-label">Total advances</span><span class="detail-val red">-${advTotal.toLocaleString()} ETB</span></div>
+          <div class="detail-row"><span class="detail-label">Net balance</span><span class="detail-val" style="color:${net>=0?'var(--green)':'var(--red)'}">${net.toLocaleString()} ETB</span></div>
+          ${role==='admin' ? `
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button class="manage-btn" onclick="openPinChange('${w}')">🔐 PIN</button>
+              <button class="manage-btn" onclick="openWorkerPerms('${w}')">⚙️ Perms</button>
+              <button class="manage-btn danger" onclick="removeWorker('${w}')">🗑️ Remove</button>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+window.toggleWorker = function(w) {
+  const card = document.getElementById('wcard_'+w);
+  if (card) card.classList.toggle('expanded');
+}
+
+// ── REPORTS ──
+function renderReports() {
+  const container = document.getElementById('reportsContent');
+  if (!container) return;
+  const workerList = getWorkerList();
+  const allAdvances = Object.values(advances);
+
+  // Get selected date from trucks tab date filter
+  const dateEl = document.getElementById('dateFilter');
+  const selectedDate = dateEl ? dateEl.value : '';
+  const today = new Date().toISOString().split('T')[0];
+  const isAll = !selectedDate;
+
+  // Filter trucks by date if a date is selected
+  const allTrucks = Object.values(trucks).filter(t => isAll || t.date === selectedDate);
+  const dateLabel = isAll ? 'All Time' : selectedDate;
+
+  // Status filter from trucks tab
+  const sf = filterStatus || 'all';
+  // Worker filter from trucks tab
+  const wf = filterWorker || 'all';
+
+  // Apply status + worker filter for the list view
+  let filtered = allTrucks;
+  if (sf !== 'all') filtered = filtered.filter(t => t.status === sf);
+  if (wf !== 'all') filtered = filtered.filter(t => t.worker === wf);
+
+  const totalTrucks = filtered.length;
+  const paidCount = filtered.filter(t=>t.status==='paid').length;
+  const partialCount = filtered.filter(t=>t.status==='partial').length;
+  const unpaidCount = filtered.filter(t=>t.status==='unpaid'||t.status==='pending').length;
+  const totalClient = filtered.reduce((s,t)=>s+(t.status==='paid'?CLIENT_PRICE:t.status==='partial'?2800:0),0);
+  const totalWorker = filtered.reduce((s,t)=>s+(WORKER_PAY[t.status]||0),0);
+  const totalCompany = totalClient - totalWorker;
+  const totalAdv = allAdvances.reduce((s,a)=>s+(a.amount||0),0);
+  const unpaidAmount = unpaidCount * CLIENT_PRICE;
+
+  // Filter chips for report
+  const statusChips = ['all','paid','partial','unpaid'].map(s=>`
+    <button class="filter-chip${sf===s?' active':''}" onclick="setReportFilter('${s}',this)" style="font-size:11px;padding:4px 10px">
+      ${s==='all'?'All':s==='paid'?'✅ Paid':s==='partial'?'⚡ Partial':'❌ Unpaid'}
+    </button>
+  `).join('');
+
+  const workerChips = ['all',...workerList].map(w=>`
+    <button class="filter-chip${wf===w?' active':''}" onclick="setReportWorkerFilter('${w}',this)" style="font-size:11px;padding:4px 10px">
+      ${w==='all'?'👥 All':w}
+    </button>
+  `).join('');
+
+  container.innerHTML = `
+    <div style="padding:12px 0 4px">
+      <div style="font-size:11px;color:var(--text3);font-weight:700;letter-spacing:0.05em;margin-bottom:8px">📅 SHOWING: ${dateLabel} ${sf!=='all'?'· '+sf:''} ${wf!=='all'?'· '+wf:''}</div>
+      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none">${statusChips}</div>
+      <div style="display:flex;gap:6px;overflow-x:auto;padding:6px 0;scrollbar-width:none">${workerChips}</div>
+    </div>
+    <div class="report-card">
+      <div class="report-title">📊 SUMMARY</div>
+      <div class="report-row"><span class="report-label">🚛 Total Trucks</span><span class="report-val">${totalTrucks}</span></div>
+      <div class="report-row"><span class="report-label">✅ Paid</span><span class="report-val" style="color:var(--green)">${paidCount}</span></div>
+      <div class="report-row"><span class="report-label">⚡ Partial</span><span class="report-val" style="color:var(--orange)">${partialCount}</span></div>
+      <div class="report-row"><span class="report-label">❌ Unpaid</span><span class="report-val" style="color:var(--red)">${unpaidCount}</span></div>
+      <div class="report-row"><span class="report-label">💰 Total Client Revenue</span><span class="report-val" style="color:var(--teal)">${totalClient.toLocaleString()} ETB</span></div>
+      <div class="report-row"><span class="report-label">👷 Total Worker Pay</span><span class="report-val">${totalWorker.toLocaleString()} ETB</span></div>
+      <div class="report-row"><span class="report-label">🏢 Company Earnings</span><span class="report-val" style="color:var(--green)">${totalCompany.toLocaleString()} ETB</span></div>
+      <div class="report-row"><span class="report-label">💸 Total Advances</span><span class="report-val" style="color:var(--red)">-${totalAdv.toLocaleString()} ETB</span></div>
+      ${unpaidCount > 0 ? `
+      <div class="report-row" style="background:rgba(239,68,68,0.1);border-radius:var(--radius-sm);padding:10px;margin-top:6px;border:1px solid rgba(239,68,68,0.3)">
+        <span class="report-label" style="color:var(--red);font-weight:700">⚠️ Missing Money (Unpaid)</span>
+        <span class="report-val" style="color:var(--red)">-${unpaidAmount.toLocaleString()} ETB</span>
+      </div>` : ''}
+    </div>
+    <div class="report-card">
+      <div class="report-title">👷 PER WORKER</div>
+      ${workerList.map(w=>{
+        const wt = filtered.filter(t=>t.worker===w);
+        const wa = allAdvances.filter(a=>a.worker===w);
+        const earned = wt.reduce((s,t)=>s+(WORKER_PAY[t.status]||0),0);
+        const adv = wa.reduce((s,a)=>s+(a.amount||0),0);
+        const net = earned - adv;
+        const wUnpaid = wt.filter(t=>t.status==='unpaid'||t.status==='pending').length;
+        const wUnpaidAmt = wUnpaid * CLIENT_PRICE;
+        if (wt.length===0 && sf==='all' && wf==='all') return `
+          <div class="report-row">
+            <span class="report-label">
+              <span style="width:8px;height:8px;border-radius:50%;background:${WORKER_COLORS[w]||'#6b7280'};display:inline-block;margin-right:4px"></span>
+              ${w}
+            </span>
+            <span class="report-val" style="color:var(--text3)">0 ETB</span>
+          </div>`;
+        if (wt.length===0) return '';
+        return `
+          <div class="report-row">
+            <span class="report-label">
+              <span style="width:8px;height:8px;border-radius:50%;background:${WORKER_COLORS[w]||'#6b7280'};display:inline-block;margin-right:4px"></span>
+              ${w} <span style="color:var(--text3);font-size:11px">(${wt.length} truck${wt.length!==1?'s':''})</span>
+            </span>
+            <div style="text-align:right">
+              <div class="report-val" style="color:${net>=0?'var(--green)':'var(--red)'}">${net.toLocaleString()} ETB</div>
+              ${wUnpaid>0?`<div style="font-size:10px;color:var(--red);font-weight:600">⚠️ -${wUnpaidAmt.toLocaleString()} unpaid</div>`:''}
+            </div>
+          </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+window.setReportFilter = function(f, el) {
+  filterStatus = f;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderReports();
+}
+window.setReportWorkerFilter = function(w, el) {
+  filterWorker = w;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderReports();
+}
+
+// ── MANAGE ──
+function renderManage() {
+  const container = document.getElementById('manageContent');
+  if (!container) return;
+  const workers = getWorkerList();
+
+  container.innerHTML = `
+    <div>
+      <div class="manage-section-title">👷 WORKERS</div>
+      <div class="manage-card">
+        ${workers.map(w=>`
+          <div class="manage-item">
+            <div class="manage-item-left">
+              <div style="width:32px;height:32px;border-radius:50%;background:${WORKER_COLORS[w]||'#6b7280'}22;color:${WORKER_COLORS[w]||'#6b7280'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${w.substring(0,2).toUpperCase()}</div>
+              <div>
+                <div class="manage-item-name">${w}</div>
+                <div class="manage-item-sub">Worker · PIN: ••••</div>
+              </div>
+            </div>
+            <div class="manage-item-right">
+              <button class="manage-btn" onclick="openWorkerPerms('${w}')">⚙️ Perms</button>
+              <button class="manage-btn" onclick="openPinChange('${w}')">🔐 PIN</button>
+              <button class="manage-btn danger" onclick="removeWorker('${w}')">🗑️</button>
+            </div>
+          </div>
+        `).join('')}
+        <div class="manage-item" onclick="openModal('modalAddWorker')">
+          <div class="manage-item-left">
+            <div class="manage-item-icon">➕</div>
+            <div><div class="manage-item-name">Add Worker</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="manage-section-title">💼 CASHIERS & PERMISSIONS</div>
+      <div class="manage-card">
+        ${['cashier1','cashier2'].map(c=>`
+          <div class="manage-item">
+            <div class="manage-item-left">
+              <div class="manage-item-icon">💼</div>
+              <div>
+                <div class="manage-item-name">${c==='cashier1'?'Cashier 1':'Cashier 2'}</div>
+                <div class="manage-item-sub">Cashier · PIN: ••••</div>
+              </div>
+            </div>
+            <div class="manage-item-right">
+              <button class="manage-btn" onclick="openCashierPerms('${c}')">⚙️ Perms</button>
+              <button class="manage-btn" onclick="openPinChange('${c}')">🔐 PIN</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div>
+      <div class="manage-section-title">🔐 ADMIN PIN</div>
+      <div class="manage-card">
+        <div class="manage-item" onclick="openPinChange('admin')">
+          <div class="manage-item-left">
+            <div class="manage-item-icon">🔐</div>
+            <div><div class="manage-item-name">Change Admin PIN</div><div class="manage-item-sub">Current PIN is hidden</div></div>
+          </div>
+          <div>›</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="manage-section-title">🌐 LANGUAGE</div>
+      <div class="manage-card" style="padding:14px">
+        <div style="display:flex;gap:8px">
+          <button class="lang-btn ${currentLang==='en'?'active':''}" onclick="setLang('en')">🇬🇧 English</button>
+          <button class="lang-btn ${currentLang==='fr'?'active':''}" onclick="setLang('fr')">🇫🇷 Français</button>
+          <button class="lang-btn ${currentLang==='so'?'active':''}" onclick="setLang('so')">🇸🇴 Soomaali</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="manage-section-title">📤 EXPORT & INSTALL</div>
+      <div class="manage-card">
+        <div class="manage-item" onclick="exportExcel()">
+          <div class="manage-item-left">
+            <div class="manage-item-icon">📊</div>
+            <div><div class="manage-item-name" style="color:var(--green)">Export to Excel (.xlsx)</div></div>
+          </div>
+        </div>
+        <div class="manage-item" onclick="installApp()">
+          <div class="manage-item-left">
+            <div class="manage-item-icon">📲</div>
+            <div><div class="manage-item-name">Install App on Phone</div></div>
+          </div>
+        </div>
+        <div class="manage-item" onclick="downloadHTML()">
+          <div class="manage-item-left">
+            <div class="manage-item-icon">📥</div>
+            <div><div class="manage-item-name">Download HTML File</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="manage-section-title">⚠️ DANGER ZONE</div>
+      <div class="manage-card">
+        <div class="manage-item" onclick="openModal('modalRecycle');renderRecycle()">
+          <div class="manage-item-left">
+            <div class="manage-item-icon">🗑️</div>
+            <div><div class="manage-item-name">Recycle Bin</div></div>
+          </div>
+        </div>
+        <div class="manage-item" onclick="clearAllData()">
+          <div class="manage-item-left">
+            <div class="manage-item-icon">⚠️</div>
+            <div><div class="manage-item-name" style="color:var(--red)">Clear All Truck Data</div></div>
+          </div>
+        </div>
+        <div class="manage-item" onclick="goLogin()">
+          <div class="manage-item-left">
+            <div class="manage-item-icon">🚪</div>
+            <div><div class="manage-item-name">Logout</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+window.setLang = function(lang) {
+  currentLang = lang;
+  localStorage.setItem('hask_lang', lang);
+  buildNav();
+  renderManage();
+  showToast('🌐 Language changed');
+}
+
+// ── PIN MANAGEMENT ──
+window.openPinChange = function(user) {
+  pinChangingUser = user;
+  document.getElementById('pinModalTitle').textContent = `🔐 Change PIN — ${user}`;
+  document.getElementById('newPin').value = '';
+  openModal('modalPin');
+}
+window.savePin = function() {
+  const pin = document.getElementById('newPin').value;
+  if (pin.length !== 4 || !/^\d{4}$/.test(pin)) { showToast('⚠️ PIN must be 4 digits'); return; }
+  setPin(pinChangingUser, pin);
+  showToast(`✅ PIN updated for ${pinChangingUser}`);
+  closeModal('modalPin');
+}
+
+// ── PERMISSIONS ──
+window.openCashierPerms = function(user) {
+  permsEditingUser = user;
+  const p = getUserPerms(user);
+  document.getElementById('permsModalTitle').textContent = `⚙️ ${user==='cashier1'?'Cashier 1':'Cashier 2'} Permissions`;
+  document.getElementById('permsContent').innerHTML = `
+    <div class="perm-row">
+      <div><div class="perm-label">➕ Add Trucks</div><div style="font-size:11px;color:var(--text3)">Can record trucks for any worker</div></div>
+      <div class="toggle${p.addTrucks?' on':''}" id="perm_addTrucks" onclick="togglePerm('addTrucks')"></div>
+    </div>
+    <div class="perm-row">
+      <div><div class="perm-label">💸 Add Advances</div><div style="font-size:11px;color:var(--text3)">Can record advance payments</div></div>
+      <div class="toggle${p.addAdvances?' on':''}" id="perm_addAdvances" onclick="togglePerm('addAdvances')"></div>
+    </div>
+    <div class="perm-row">
+      <div><div class="perm-label">💳 Edit Payment Status</div><div style="font-size:11px;color:var(--text3)">Can change paid/unpaid/partial</div></div>
+      <div class="toggle${p.editStatus?' on':''}" id="perm_editStatus" onclick="togglePerm('editStatus')"></div>
+    </div>
+    <div class="perm-row">
+      <div><div class="perm-label">🗑️ Delete Truck Records</div><div style="font-size:11px;color:var(--text3)">Can permanently delete entries</div></div>
+      <div class="toggle${p.deleteTrucks?' on':''}" id="perm_deleteTrucks" onclick="togglePerm('deleteTrucks')"></div>
+    </div>
+  `;
+  openModal('modalPerms');
+}
+window.openWorkerPerms = function(user) {
+  permsEditingUser = user;
+  const p = getUserPerms(user);
+  document.getElementById('permsModalTitle').textContent = `⚙️ Worker Permissions`;
+  document.getElementById('permsContent').innerHTML = `
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Worker: ${user}</div>
+    <div class="perm-row">
+      <div><div class="perm-label">➕ Add Trucks</div><div style="font-size:11px;color:var(--text3)">Can record new trucks using the + Add button</div></div>
+      <div class="toggle${p.canAddOwnTrucks?' on':''}" id="perm_canAddOwnTrucks" onclick="togglePerm('canAddOwnTrucks')"></div>
+    </div>
+    <div class="perm-row">
+      <div><div class="perm-label">💳 Edit Payment Status</div><div style="font-size:11px;color:var(--text3)">Can change paid / unpaid / partial on their trucks</div></div>
+      <div class="toggle${p.canEditStatus?' on':''}" id="perm_canEditStatus" onclick="togglePerm('canEditStatus')"></div>
+    </div>
+    <div class="perm-row">
+      <div><div class="perm-label">👥 See All Workers' Trucks</div><div style="font-size:11px;color:var(--text3)">Can view trucks added by other workers</div></div>
+      <div class="toggle${p.seeAllTrucks?' on':''}" id="perm_seeAllTrucks" onclick="togglePerm('seeAllTrucks')"></div>
+    </div>
+    <div class="perm-row">
+      <div><div class="perm-label">💰 See Earnings Tab</div><div style="font-size:11px;color:var(--text3)">Can open the Earnings screen</div></div>
+      <div class="toggle${p.seeEarnings!==false?' on':''}" id="perm_seeEarnings" onclick="togglePerm('seeEarnings')"></div>
+    </div>
+    <div class="perm-row">
+      <div><div class="perm-label">📊 See Stats Bar</div><div style="font-size:11px;color:var(--text3)">Can see truck counts and ETB summary bar</div></div>
+      <div class="toggle${p.seeStats!==false?' on':''}" id="perm_seeStats" onclick="togglePerm('seeStats')"></div>
+    </div>
+    <div class="perm-row">
+      <div><div class="perm-label">👥 See Team Section</div><div style="font-size:11px;color:var(--text3)">Can see the Team Trucks breakdown below stats</div></div>
+      <div class="toggle${p.seeTeam?' on':''}" id="perm_seeTeam" onclick="togglePerm('seeTeam')"></div>
+    </div>
+  `;
+  openModal('modalPerms');
+}
+window.togglePerm = function(perm) {
+  const el = document.getElementById('perm_'+perm);
+  el.classList.toggle('on');
+}
+window.savePerms = function() {
+  const all = getPerms();
+  const perms = all[permsEditingUser] || {};
+  document.querySelectorAll('#permsContent .perm-row').forEach(row=>{
+    const toggle = row.querySelector('.toggle');
+    const permName = toggle.id.replace('perm_','');
+    perms[permName] = toggle.classList.contains('on');
+  });
+  setUserPerms(permsEditingUser, perms);
+  showToast(`✅ Permissions saved for ${permsEditingUser}`);
+  closeModal('modalPerms');
+  renderManage();
+}
+
+// ── ADD WORKER ──
+window.saveNewWorker = function() {
+  const name = document.getElementById('newWorkerName').value.trim();
+  const pin = document.getElementById('newWorkerPin').value;
+  if (!name) { showToast('⚠️ Enter worker name'); return; }
+  if (pin.length !== 4) { showToast('⚠️ PIN must be 4 digits'); return; }
+  const workers = getWorkerList();
+  if (workers.includes(name)) { showToast('⚠️ Worker already exists'); return; }
+  workers.push(name);
+  saveWorkerList(workers);
+  setPin(name, pin);
+  buildWorkerFilterBar();
+  renderManage();
+  renderWorkers();
+  showToast(`✅ Worker ${name} added`);
+  closeModal('modalAddWorker');
+}
+window.removeWorker = function(name) {
+  if (!confirm(`Remove worker ${name}?`)) return;
+  const workers = getWorkerList().filter(w=>w!==name);
+  saveWorkerList(workers);
+  buildWorkerFilterBar();
+  renderManage();
+  renderWorkers();
+  showToast(`🗑️ ${name} removed`);
+}
+
+// ── RECYCLE BIN ──
+function renderRecycle() {
+  const container = document.getElementById('recycleList');
+  container.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><p>Loading...</p></div>';
+  get(ref(db,'deleted')).then(snap => {
+    deletedTrucks = snap.val() || {};
+    const list = Object.entries(deletedTrucks).map(([k,v])=>({...v,_id:k}))
+      .sort((a,b)=>(b.deletedAt||0)-(a.deletedAt||0));
+    if (list.length===0) {
+      container.innerHTML = '<div class="empty-state"><div class="icon">🗑️</div><p>Recycle bin is empty</p></div>';
+      return;
+    }
+    container.innerHTML = list.map(t=>`
+      <div class="deleted-card">
+        <div class="truck-plate">${t.plate}</div>
+        <div class="truck-meta">📅 ${t.date} · ${t.status} · ${t.worker||'Unassigned'}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">Deleted: ${t.deletedAt?new Date(t.deletedAt).toLocaleString():'-'}</div>
+        <div class="deleted-actions">
+          <button class="truck-action-btn primary" onclick="restoreTruck('${t._id}')">↩️ Restore</button>
+          <button class="truck-action-btn danger" onclick="permDelete('${t._id}')">🗑️ Delete Forever</button>
+        </div>
+      </div>
+    `).join('');
+  });
+}
+window.restoreTruck = function(id) {
+  const t = deletedTrucks[id];
+  if (!t) return;
+  const {_id,...data} = t;
+  set(ref(db,'trucks/'+id), {...data, deletedAt:null, deletedBy:null});
+  remove(ref(db,'deleted/'+id));
+  showToast('↩️ Truck restored');
+  renderRecycle();
+}
+window.permDelete = function(id) {
+  if (!confirm('Delete forever? This cannot be undone.')) return;
+  remove(ref(db,'deleted/'+id));
+  showToast('🗑️ Permanently deleted');
+  renderRecycle();
+}
+window.clearAllData = function() {
+  if (!confirm('Clear ALL truck data? This cannot be undone!')) return;
+  remove(ref(db,'trucks'));
+  showToast('⚠️ All data cleared');
+}
+
+// ── MODAL HELPERS ──
+window.openModal = function(id) { document.getElementById(id).classList.add('active'); }
+window.closeModal = function(id) { document.getElementById(id).classList.remove('active'); }
+document.querySelectorAll('.modal-overlay').forEach(o=>{
+  o.addEventListener('click', e=>{ if(e.target===o) o.classList.remove('active'); });
+});
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// ── EXPORT / INSTALL ──
+window.exportExcel = function() {
+  const rows = [['Plate','Date','Worker','Status','Notes','Added By','Total Fare','Worker Pay','Company']];
+  Object.values(trucks).forEach(t=>{
+    const workerEarn = WORKER_PAY[t.status]||0;
+    const totalFare = t.status==='paid'?CLIENT_PRICE:t.status==='partial'?Math.round(CLIENT_PRICE*0.6):0;
+    rows.push([t.plate,t.date,t.worker||'',t.status,t.notes||'',t.addedBy||'',totalFare,workerEarn,totalFare-workerEarn]);
+  });
+  let csv = rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `hask-trucks-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('📊 Exported!');
+}
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); deferredPrompt=e; });
+window.installApp = function() {
+  if (deferredPrompt) { deferredPrompt.prompt(); }
+  else { showToast('📲 Open in browser and use "Add to Home Screen"'); }
+}
+window.downloadHTML = function() {
+  const html = document.documentElement.outerHTML;
+  const blob = new Blob([html],{type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'hask-tracker.html';
+  a.click();
+  showToast('📥 Downloaded!');
+}
+
+// ── WKABE ICON (Flag Design #6) ──
+function drawWKABEIcon(canvas) {
+  const ctx = canvas.getContext('2d');
+  const s = canvas.width;
+  function rr(x,y,w,h,r){
+    ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);
+    ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);
+    ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
+    ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);
+    ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+  }
+  ctx.clearRect(0,0,s,s);
+  // Blue top half
+  ctx.fillStyle='#6DD5ED';rr(0,0,s,s,s*0.22);ctx.fill();
+  // Green bottom + clip
+  ctx.save();ctx.beginPath();rr(0,0,s,s,s*0.22);ctx.clip();
+  ctx.fillStyle='#2ECC71';ctx.fillRect(0,s/2,s,s/2);
+  // White triangle
+  ctx.fillStyle='#fff';
+  ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(s*0.5,s/2);ctx.lineTo(0,s);ctx.closePath();ctx.fill();
+  // Red star
+  ctx.fillStyle='#e63946';
+  ctx.beginPath();
+  for(let i=0;i<10;i++){
+    const r=i%2===0?s*0.1:s*0.04;
+    const a=Math.PI/5*i-Math.PI/2;
+    i===0?ctx.moveTo(s*0.18+r*Math.cos(a),s/2+r*Math.sin(a)):ctx.lineTo(s*0.18+r*Math.cos(a),s/2+r*Math.sin(a));
+  }ctx.closePath();ctx.fill();
+  ctx.restore();
+  // WKABE text
+  ctx.fillStyle='#1a1a2e';
+  ctx.font=`bold ${s*0.185}px Arial Black,sans-serif`;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('WKABE',s*0.62,s*0.42);
+  ctx.fillStyle='rgba(0,0,0,0.45)';
+  ctx.font=`${s*0.075}px sans-serif`;
+  ctx.fillText('SERVICES',s*0.63,s*0.58);
+}
+
+// Draw icons on all canvases
+function initIcons() {
+  ['loginLogo','splashIcon','headerLogoCanvas'].forEach(id => {
+    const c = document.getElementById(id);
+    if (c) drawWKABEIcon(c);
+  });
+  // Set as apple touch icon
+  const c = document.createElement('canvas');
+  c.width = c.height = 192;
+  drawWKABEIcon(c);
+  const link = document.createElement('link');
+  link.rel = 'apple-touch-icon';
+  link.href = c.toDataURL('image/png');
+  document.head.appendChild(link);
+}
+
+// ── SPLASH ──
+function showSplash() {
+  const splash = document.getElementById('splashScreen');
+  // Draw icon on splash
+  const sc = document.getElementById('splashIcon');
+  if (sc) drawWKABEIcon(sc);
+  // Set truck photo
+  const img = document.getElementById('splashImg');
+  if (img) img.src = 'splash.jpg';
+  // Hide after 2s
+  setTimeout(() => {
+    splash.classList.add('hide');
+    setTimeout(() => splash.remove(), 700);
+  }, 2000);
+}
+
+// ── SCREEN HELPER ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── PWA ICONS (generate via canvas) ──
+function generateIcon(size) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const grad = ctx.createLinearGradient(0,0,size,size);
+  grad.addColorStop(0,'#3b82f6');
+  grad.addColorStop(1,'#a855f7');
+  ctx.fillStyle = grad;
+  const r = size * 0.2;
+  ctx.beginPath();
+  ctx.moveTo(r,0); ctx.lineTo(size-r,0);
+  ctx.quadraticCurveTo(size,0,size,r);
+  ctx.lineTo(size,size-r);
+  ctx.quadraticCurveTo(size,size,size-r,size);
+  ctx.lineTo(r,size);
+  ctx.quadraticCurveTo(0,size,0,size-r);
+  ctx.lineTo(0,r);
+  ctx.quadraticCurveTo(0,0,r,0);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = `bold ${size*0.35}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('HSK', size/2, size/2);
+  return c.toDataURL('image/png');
+}
+// Set icons dynamically
+document.addEventListener('DOMContentLoaded', () => {
+  const icon192 = generateIcon(192);
+  const icon512 = generateIcon(512);
+  const link192 = document.createElement('link');
+  link192.rel = 'apple-touch-icon';
+  link192.href = icon192;
+  document.head.appendChild(link192);
+});
+
+// ── SERVICE WORKER (PWA) ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/OliTest/sw.js').catch(()=>{});
+}
+
+// ── INIT ──
+buildLogin();
+showScreen('loginScreen');
+initIcons();
+showSplash();
+</script>
+</body>
+</html>
