@@ -5,8 +5,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Hask">
-<meta name="application-name" content="Hask">
+<meta name="apple-mobile-web-app-title" content="Hask TEST">
+<meta name="application-name" content="Hask TEST">
 <meta name="description" content="Wais-Kabe Truck Tracker — Djibouti">
 <meta name="msapplication-TileColor" content="#0d1f3c">
 <meta name="msapplication-TileImage" content="icon-192.png">
@@ -16,7 +16,7 @@
 <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-<title>Hask — Truck Tracker</title>
+<title>🧪 Hask TEST — Staging App</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700;800&amp;family=Barlow+Condensed:wght@600;700;800&amp;display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -167,6 +167,28 @@ input:checked+.slider:before{transform:translateX(20px);}
 .pending-meta{font-size:10px;color:var(--muted);margin-top:2px;}
 .t-btn-pending{background:rgba(155,89,182,0.2);border:1px solid rgba(155,89,182,0.4);color:#c39bd3;padding:6px 11px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;}
 .badge-pending{background:rgba(241,196,15,0.18);color:#f1c40f;border:1px solid rgba(241,196,15,0.35);padding:3px 10px;border-radius:20px;font-size:10px;font-weight:800;letter-spacing:0.5px;}
+/* TEST APP BANNER */
+.test-banner{position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(90deg,#f1c40f,#f39c12);color:#000;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:1px;padding:5px 12px;display:flex;align-items:center;justify-content:space-between;}
+.test-banner-label{display:flex;align-items:center;gap:6px;}
+body.test-mode{padding-top:30px;}
+/* CHANGELOG */
+.changelog-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.changelog-overlay.open{opacity:1;pointer-events:all;}
+.changelog-sheet{background:#0d1f3c;border-radius:20px 20px 0 0;width:100%;max-height:80vh;overflow-y:auto;padding:20px 16px 30px;}
+.cl-handle{width:36px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin:0 auto 16px;}
+.cl-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px;}
+.cl-sub{font-size:11px;color:var(--muted);margin-bottom:16px;}
+.cl-item{background:rgba(255,255,255,0.05);border-radius:12px;padding:12px;margin-bottom:8px;border-left:3px solid;}
+.cl-item-new{border-color:var(--green);}
+.cl-item-fix{border-color:var(--gold);}
+.cl-item-change{border-color:var(--bright);}
+.cl-tag{font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.cl-desc{font-size:12px;line-height:1.5;color:rgba(255,255,255,0.85);}
+.push-btn{width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#e74c3c,#c0392b);color:white;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;letter-spacing:1px;cursor:pointer;margin-top:12px;}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.compare-box{background:rgba(255,255,255,0.05);border-radius:10px;padding:10px;text-align:center;}
+.compare-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.compare-val{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;}
 /* DATE TABS */
 .date-tabs-bar{display:flex;gap:7px;overflow-x:auto;padding:10px 13px 6px;flex-shrink:0;-webkit-overflow-scrolling:touch;}
 .date-tabs-bar::-webkit-scrollbar{display:none;}
@@ -212,7 +234,7 @@ input:checked+.slider:before{transform:translateX(20px);}
 <div class="screen" id="s-login">
   <div class="topbar">
     <div class="topbar-logo">HSK</div>
-    <div style="flex:1;"><div class="topbar-title">Hask Tracker</div><div class="topbar-sub">Hask Services — Djibouti</div></div>
+    <div style="flex:1;"><div class="topbar-title">🧪 Hask TEST APP</div><div class="topbar-sub">Staging — Safe to test</div></div>
   </div>
   <div class="scroll" style="display:flex;flex-direction:column;align-items:center;padding-top:28px;">
     <div style="font-size:48px;margin-bottom:12px;">🚛</div>
@@ -789,6 +811,42 @@ input:checked+.slider:before{transform:translateX(20px);}
 </div>
 
 
+<!-- TEST BANNER -->
+<div class="test-banner" id="test-banner">
+  <div class="test-banner-label">🧪 <span>HASK TEST — Safe Sandbox</span></div>
+  <button onclick="openChangelog()" style="background:rgba(0,0,0,0.2);border:1px solid rgba(0,0,0,0.3);color:#000;border-radius:8px;padding:2px 10px;font-size:10px;font-weight:800;cursor:pointer;">📋 Changelog</button>
+</div>
+
+<!-- CHANGELOG SHEET -->
+<div class="changelog-overlay" id="changelog-overlay" onclick="if(event.target===this)closeChangelog()">
+  <div class="changelog-sheet">
+    <div class="cl-handle"></div>
+    <div class="cl-title">📋 Hask TEST Features</div>
+    <div class="cl-sub" id="cl-date">Staging version</div>
+    <div style="font-size:10px;font-weight:800;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">📊 Live vs Test</div>
+    <div class="compare-grid">
+      <div class="compare-box"><div class="compare-lbl">🏢 Live Trucks</div><div class="compare-val" id="live-truck-count" style="color:var(--gold);">…</div></div>
+      <div class="compare-box"><div class="compare-lbl">🧪 Test Trucks</div><div class="compare-val" id="test-truck-count" style="color:var(--teal);">…</div></div>
+      <div class="compare-box"><div class="compare-lbl">🏢 Live Workers</div><div class="compare-val" id="live-worker-count" style="color:var(--gold);">…</div></div>
+      <div class="compare-box"><div class="compare-lbl">🧪 Test Workers</div><div class="compare-val" id="test-worker-count" style="color:var(--teal);">…</div></div>
+    </div>
+    <div style="font-size:10px;font-weight:800;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">🆕 Features</div>
+    <div>
+      <div class="cl-item cl-item-new"><div class="cl-tag" style="color:var(--green);">🆕 NEW</div><div class="cl-desc"><strong>Date Tabs</strong> — Trucks grouped by day with per-day stats.</div></div>
+      <div class="cl-item cl-item-new"><div class="cl-tag" style="color:var(--green);">🆕 NEW</div><div class="cl-desc"><strong>Recycle Bin</strong> — Deleted trucks saved. Admin restores or deletes permanently.</div></div>
+      <div class="cl-item cl-item-new"><div class="cl-tag" style="color:var(--green);">🆕 NEW</div><div class="cl-desc"><strong>Pre-paid Pending</strong> — Add truck with no worker. Assign later when worker arrives.</div></div>
+      <div class="cl-item cl-item-fix"><div class="cl-tag" style="color:var(--gold);">🔒 SECURITY</div><div class="cl-desc"><strong>Duplicate Plate Block</strong> — Same plate blocked with name + time of who added it.</div></div>
+      <div class="cl-item cl-item-change"><div class="cl-tag" style="color:var(--bright);">⚙️ IMPROVED</div><div class="cl-desc"><strong>Worker Permissions</strong> — 6 toggles per worker.</div></div>
+    </div>
+    <div style="margin-top:16px;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.2);border-radius:12px;padding:12px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#e74c3c;margin-bottom:6px;">🚀 Push to Live</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Happy with testing? Download and upload to GitHub to go live.</div>
+      <button class="push-btn" onclick="pushToLive()">📥 Download as Live App</button>
+    </div>
+    <button onclick="closeChangelog()" style="width:100%;padding:12px;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;margin-top:8px;">Close</button>
+  </div>
+</div>
+
 <!-- PWA BANNER -->
 <div class="pwa-banner hidden" id="pwa-banner">
   <div style="font-size:30px;">📲</div>
@@ -813,8 +871,8 @@ import { getDatabase, ref, set, push, get, onValue, remove, update }
 const firebaseConfig = {
   apiKey: "AIzaSyB_LGbqv3WSm__LVBoClLKuV",
   authDomain: "hask-a71b3.firebaseapp.com",
-  databaseURL: "https://hask-a71b3-default-rtdb.firebaseio.com",
-  projectId: "hask-a71b3",
+  databaseURL: "https://kabe-with-default-rtdb.firebaseio.com",
+  projectId: "kabe-with",
   storageBucket: "hask-a71b3.firebasestorage.app",
   messagingSenderId: "281862563279",
   appId: "1:281862563279:web:a638f0d3590d77cf071eba"
@@ -865,7 +923,7 @@ function calcTotalFare(truckList){
 const COLORS=['#2d7dd2','#00c9b1','#f5a623','#e74c3c','#9b59b6','#1abc9c','#e67e22'];
 
 // ── OFFLINE QUEUE ──
-let offlineQueue = JSON.parse(localStorage.getItem('hask_offline_queue') || '[]');
+let offlineQueue = JSON.parse(localStorage.getItem('hasktest_offline_queue') || '[]');
 let isOnline = navigator.onLine;
 
 window.addEventListener('online', async () => {
@@ -882,7 +940,7 @@ window.addEventListener('offline', () => {
 });
 
 function saveOfflineQueue() {
-  localStorage.setItem('hask_offline_queue', JSON.stringify(offlineQueue));
+  localStorage.setItem('hasktest_offline_queue', JSON.stringify(offlineQueue));
 }
 
 async function flushOfflineQueue() {
@@ -905,7 +963,7 @@ async function flushOfflineQueue() {
 
 function fbSet(path, val) {
   // Also persist to localStorage as cache
-  try { localStorage.setItem('hask_cache_' + path.replace(/\//g,'_'), JSON.stringify(val)); } catch(e){}
+  try { localStorage.setItem('hasktest_cache_' + path.replace(/\//g,'_'), JSON.stringify(val)); } catch(e){}
   if(isOnline) {
     return set(ref(db, path), val).catch(e => {
       offlineQueue.push({type:'set', path, val});
@@ -2064,7 +2122,7 @@ const LANGS = {
     collectionRate:'Heerka Ururinta', collected:'La Ururiyey', outstanding:'Hadhay',
   }
 };
-let curLang = localStorage.getItem('hask_lang') || 'en';
+let curLang = localStorage.getItem('hasktest_lang') || 'en';
 function T(key){ return (LANGS[curLang]||LANGS.en)[key] || (LANGS.en)[key] || key; }
 function cycleLang(){
   const order=['en','fr','so'];
@@ -2073,7 +2131,7 @@ function cycleLang(){
 }
 function setLang(code){
   curLang=code;
-  localStorage.setItem('hask_lang',curLang);
+  localStorage.setItem('hasktest_lang',curLang);
   applyLang();
   rerenderCurrent();
   // re-render whichever admin/cashier sub-screen is active
@@ -2327,6 +2385,35 @@ function confirmAssign(){
 }
 
 
+
+// ── HASK TEST APP FUNCTIONS ───────────────────────────────────
+function openChangelog(){
+  document.getElementById('changelog-overlay').classList.add('open');
+  document.getElementById('cl-date').textContent='Staging · '+new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  document.getElementById('test-truck-count').textContent=trucks.length;
+  document.getElementById('test-worker-count').textContent=workers.length;
+  fetchLiveCounts();
+}
+function closeChangelog(){ document.getElementById('changelog-overlay').classList.remove('open'); }
+async function fetchLiveCounts(){
+  try {
+    const {initializeApp:ia2,getApps}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const {getDatabase:gdb2,ref:ref2,get:get2}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+    let liveApp=getApps().find(a=>a.name==='hasklive');
+    if(!liveApp) liveApp=ia2({apiKey:"AIzaSyB_LGbqv3WSm__LVBoClLKuV",databaseURL:"https://hask-a71b3-default-rtdb.firebaseio.com",projectId:"hask-a71b3"},'hasklive');
+    const ldb=gdb2(liveApp);
+    const [ts,ws]=await Promise.all([get2(ref2(ldb,'hask/trucks')),get2(ref2(ldb,'hask/workers'))]);
+    const tv=ts.val(); const wv=ws.val();
+    document.getElementById('live-truck-count').textContent=tv?(Array.isArray(tv)?tv:Object.values(tv)).length:0;
+    document.getElementById('live-worker-count').textContent=wv?(Array.isArray(wv)?wv:Object.values(wv)).length:0;
+  } catch(e){ document.getElementById('live-truck-count').textContent='—'; document.getElementById('live-worker-count').textContent='—'; }
+}
+function pushToLive(){
+  const blob=new Blob([document.documentElement.outerHTML],{type:'text/html'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='index.html'; a.click();
+  toast('📥 Downloaded! Upload to GitHub to go live.',4000); closeChangelog();
+}
+
 function ktoggleFlip(id){
   const hidden=document.getElementById(id);
   const visual=document.getElementById('kt-'+id);
@@ -2394,7 +2481,7 @@ function setVh(){document.documentElement.style.setProperty('--vh',''+window.inn
 setVh();
 window.addEventListener('resize',setVh);
 // Mark body as test mode (adds top padding for banner)
-// live mode
+document.body.classList.add('test-mode');
 
 // ── EXPOSE ALL FUNCTIONS TO GLOBAL SCOPE (needed for onclick in HTML) ──
 window.pk=pk; window.goBack=goBack; window.logout=logout;
@@ -2425,12 +2512,15 @@ window.triggerInstall=triggerInstall; window.dismissBanner=dismissBanner;
 window.selectUser=selectUser;
 window.ktoggleFlip=ktoggleFlip;
 window.cycleLang=cycleLang;
+window.openChangelog=openChangelog;
+window.closeChangelog=closeChangelog;
+window.pushToLive=pushToLive;
 window.setLang=setLang;
 window.applyLang=applyLang;
 
 // ── INIT ──
 go('s-login');
-curLang=localStorage.getItem('hask_lang')||'en';
+curLang=localStorage.getItem('hasktest_lang')||'en';
 applyLang();
 document.getElementById('who-list').innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">🔥 Connecting to Firebase…</div>';
 init().catch(e => {

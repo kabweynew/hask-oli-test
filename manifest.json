@@ -1,21 +1,13 @@
 {
-  "name": "WKABE Hask Tracker",
-  "short_name": "WKABE",
-  "description": "Hask Services — Djibouti Truck Tracker",
-  "start_url": "/OliTest/?pwa=1",
-  "scope": "/OliTest/",
+  "name": "KAB Services — Truck Tracker",
+  "short_name": "KAB Tracker",
+  "description": "Offline truck, payment, and advance tracker for KAB Services / Wais-Kabe operations in Djibouti",
+  "start_url": ".",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#0f1623",
-  "theme_color": "#0f1623",
-  "categories": ["business", "logistics"],
+  "background_color": "#0d1f3c",
+  "theme_color": "#1a3a6b",
+  "orientation": "portrait-primary",
   "icons": [
-    {
-      "src": "splash.jpg",
-      "sizes": "any",
-      "type": "image/jpeg",
-      "purpose": "any"
-    },
     {
       "src": "icon-192.png",
       "sizes": "192x192",
@@ -28,7 +20,5 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ],
-  "screenshots": [],
-  "prefer_related_applications": false
+  ]
 }
