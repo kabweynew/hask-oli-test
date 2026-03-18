@@ -3,11 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Hask — Truck Tracker</title>
+<title>WKABE — Hask Truck Tracker</title>
+<meta name="description" content="Hask Services Djibouti — Truck tracking and worker management">
 <meta name="theme-color" content="#0f1623">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WKABE">
 <link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="splash.jpg">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 
@@ -669,9 +673,56 @@
     border-radius: var(--radius);
     padding: 14px;
     margin-bottom: 10px;
-    opacity: 0.7;
+    opacity: 0.85;
+    transition: opacity 0.2s;
   }
+  .deleted-card:hover { opacity: 1; }
+  .deleted-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 6px; }
+  .deleted-plate { font-size: 16px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .deleted-meta { font-size: 11px; color: var(--text2); margin-bottom: 4px; line-height: 1.6; }
+  .deleted-time { font-size: 10px; color: var(--text3); margin-bottom: 10px; }
   .deleted-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .recycle-empty { padding: 32px 16px; text-align: center; }
+  .recycle-empty .icon { font-size: 44px; margin-bottom: 10px; }
+  .recycle-empty p { color: var(--text2); font-size: 14px; }
+  .recycle-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .recycle-count { font-size: 12px; color: var(--text2); font-weight: 600; }
+  .recycle-clear-btn { font-size: 11px; font-weight: 700; color: var(--red); background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); border-radius: var(--radius-sm); padding: 5px 10px; cursor: pointer; font-family: inherit; }
+
+  /* ── DUPLICATE WARNING ── */
+  .dup-warning {
+    background: rgba(245,158,11,0.12);
+    border: 1.5px solid rgba(245,158,11,0.4);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--orange);
+    font-weight: 600;
+    margin-top: 6px;
+    display: none;
+    line-height: 1.5;
+  }
+  .dup-warning.visible { display: block; }
+
+  /* ── PWA UPDATE BANNER ── */
+  #updateBanner {
+    position: fixed; top: 22px; left: 0; right: 0; z-index: 9998;
+    background: var(--accent);
+    color: #fff;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px;
+    font-size: 13px; font-weight: 600;
+    transform: translateY(-100%);
+    transition: transform 0.3s ease;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+  #updateBanner.show { transform: translateY(0); }
+  #updateBanner button {
+    background: #fff; color: var(--accent);
+    border: none; border-radius: 6px;
+    padding: 5px 12px; font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: inherit; margin-left: 12px;
+  }
 
   /* ── WORKER VIEW (own trucks) ── */
   .worker-view-header {
@@ -751,6 +802,12 @@
 <!-- TEST BANNER -->
 <div style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#f59e0b;color:#000;text-align:center;font-size:11px;font-weight:800;padding:3px;letter-spacing:0.08em">🧪 TEST MODE — Data goes to test database only</div>
 <div style="height:22px;background:var(--bg)"></div>
+
+<!-- PWA UPDATE BANNER -->
+<div id="updateBanner">
+  🔄 New version available!
+  <button onclick="applyUpdate()">Update Now</button>
+</div>
 
 <div id="loginScreen" class="screen active">
   <canvas id="loginLogo" width="72" height="72" style="border-radius:20%;margin-bottom:12px;box-shadow:0 8px 32px rgba(0,0,0,0.5)"></canvas>
@@ -864,6 +921,27 @@
     <div id="tabManage" style="display:none;">
       <div class="manage-content" id="manageContent"></div>
     </div>
+
+    <!-- Recycle Bin Tab -->
+    <div id="tabRecycle" style="display:none;">
+      <div style="padding:12px 16px 4px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.08em">🗑️ RECYCLE BIN</div>
+        <div id="recycleBinCount" style="font-size:12px;color:var(--text2);font-weight:600"></div>
+      </div>
+      <div style="padding:0 16px 8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <input id="recycleSearch" class="form-input" style="flex:1;min-width:140px;padding:7px 12px;font-size:12px;" placeholder="🔍 Search plate..." oninput="filterRecycle()">
+        <button class="recycle-clear-btn" onclick="emptyRecycleBin()" style="white-space:nowrap;">🗑️ Empty All</button>
+      </div>
+      <div style="padding:0 16px;" id="recycleFilterBar">
+        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none;">
+          <button class="filter-chip active" id="rfAll" onclick="setRecycleFilter('all',this)">All</button>
+          <button class="filter-chip" id="rfPaid" onclick="setRecycleFilter('paid',this)">✅ Paid</button>
+          <button class="filter-chip" id="rfPartial" onclick="setRecycleFilter('partial',this)">⚡ Partial</button>
+          <button class="filter-chip" id="rfUnpaid" onclick="setRecycleFilter('unpaid',this)">❌ Unpaid</button>
+        </div>
+      </div>
+      <div id="recycleList" style="padding:0 16px 100px;"></div>
+    </div>
   </div>
 
   <!-- BOTTOM NAV -->
@@ -877,7 +955,8 @@
     <div class="modal-title" id="truckModalTitle">🚛 Add Truck</div>
     <div class="form-group">
       <label class="form-label">PLATE NUMBER</label>
-      <input class="form-input" id="truckPlate" placeholder="e.g. DJ 1234 AB" autocomplete="off">
+      <input class="form-input" id="truckPlate" placeholder="e.g. DJ 1234 AB" autocomplete="off" oninput="checkDuplicate()">
+      <div class="dup-warning" id="dupWarning">⚠️ This plate may already be recorded today!</div>
     </div>
     <div class="form-group">
       <label class="form-label">DATE</label>
@@ -887,7 +966,7 @@
       <label class="form-label">WORKER</label>
       <select class="form-select" id="truckWorker"></select>
     </div>
-    <div class="form-group">
+    <div class="form-group" id="statusGroup">
       <label class="form-label">PAYMENT STATUS</label>
       <div class="radio-group" id="statusRadio"></div>
     </div>
@@ -979,17 +1058,6 @@
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeModal('modalPerms')">Cancel</button>
       <button class="btn-primary" onclick="savePerms()">💾 Save</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="modalRecycle">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">🗑️ Recycle Bin</div>
-    <div id="recycleList"></div>
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal('modalRecycle')">Close</button>
     </div>
   </div>
 </div>
@@ -1151,7 +1219,11 @@ function getUserPerms(user) {
   const all = getPerms();
   if (all[user]) return all[user];
   if (user==='cashier1'||user==='cashier2') return {addTrucks:true,addAdvances:true,editStatus:true,deleteTrucks:false};
-  if (DEFAULT_WORKERS.includes(user)) return {canAddOwnTrucks:false};
+  // All workers: can add trucks, cannot edit payment status by default
+  const workerList = getWorkerList();
+  if (DEFAULT_WORKERS.includes(user) || workerList.includes(user)) {
+    return {canAddOwnTrucks:true, canEditStatus:false, seeEarnings:true, seeStats:true, seeAllTrucks:false, seeTeam:false};
+  }
   return {};
 }
 function setUserPerms(user, p) { const all=getPerms(); all[user]=p; savePermsData(all); }
@@ -1181,6 +1253,14 @@ function initFirebase() {
 
   onValue(ref(db,'deleted'), snap => {
     deletedTrucks = snap.val() || {};
+    // Update bin nav badge live
+    const total = Object.keys(deletedTrucks).length;
+    const navBin = document.getElementById('nav_recycle');
+    if (navBin) {
+      const lbl = navBin.querySelector('.nav-label');
+      if (lbl) lbl.textContent = total > 0 ? `Bin (${total})` : 'Bin';
+    }
+    if (currentTab === 'recycle') renderRecycleList();
   });
 }
 
@@ -1330,6 +1410,7 @@ function buildNav() {
     {id:'advances', icon:'💸', label:t('advances')},
     {id:'reports', icon:'📊', label:t('reports')},
     {id:'manage', icon:'⚙️', label:t('manage')},
+    {id:'recycle', icon:'🗑️', label:'Bin'},
   ];
   else if (role==='cashier') {
     const p = getUserPerms(currentUser.id);
@@ -1364,7 +1445,7 @@ window.switchTab = function(tab) {
   if (nb) nb.classList.add('active');
 
   // Show/hide tabs
-  ['Trucks','Workers','Advances','Reports','Manage'].forEach(t => {
+  ['Trucks','Workers','Advances','Reports','Manage','Recycle'].forEach(t => {
     const el = document.getElementById('tab'+t);
     if (el) el.style.display = (tab===t.toLowerCase()) ? '' : 'none';
   });
@@ -1375,6 +1456,7 @@ window.switchTab = function(tab) {
   if (tab==='reports') renderReports();
   if (tab==='manage') renderManage();
   if (tab==='trucks') renderTrucks();
+  if (tab==='recycle') renderRecycle();
 }
 
 // ── TODAY / DATE ──
@@ -1509,7 +1591,7 @@ function renderTrucks() {
   ` : '';
 
   const perms = getUserPerms(id);
-  const canEditStatus = isToday && (role==='admin' || (role==='cashier' && perms.editStatus));
+  const canEditStatus = isToday && (role==='admin' || (role==='cashier' && perms.editStatus) || (role==='worker' && perms.canEditStatus));
   const canDelete = isToday && (role==='admin' || (role==='cashier' && perms.deleteTrucks));
   const canEdit = isToday && (role==='admin' || (role==='cashier' && perms.addTrucks));
 
@@ -1571,13 +1653,41 @@ window.openEditTruck = function(id) {
   document.getElementById('truckPlate').value = truck.plate||'';
   document.getElementById('truckDate').value = truck.date||'';
   document.getElementById('truckNotes').value = truck.notes||'';
+  // Clear duplicate warning on open
+  const warn = document.getElementById('dupWarning');
+  if (warn) warn.classList.remove('visible');
   const workers = getWorkerList();
   const sel = document.getElementById('truckWorker');
   sel.innerHTML = `<option value="">— Unassigned —</option>${workers.map(w=>`<option value="${w}">${w}</option>`).join('')}`;
   sel.value = truck.worker||'';
   document.getElementById('workerGroup').style.display = currentUser.role==='worker' ? 'none' : '';
+  document.getElementById('statusGroup').style.display = currentUser.role==='worker' ? 'none' : '';
   buildStatusRadio('statusRadio', truck.status||'unpaid');
   openModal('modalTruck');
+}
+
+// ── DUPLICATE CHECK (live, as user types) ──
+window.checkDuplicate = function() {
+  const plate = (document.getElementById('truckPlate').value || '').trim().toUpperCase();
+  const date = document.getElementById('truckDate').value;
+  const warn = document.getElementById('dupWarning');
+  if (!warn) return;
+  if (!plate || plate.length < 2) { warn.classList.remove('visible'); return; }
+
+  const matches = Object.entries(trucks).filter(([k,v]) =>
+    v.plate && v.plate.toUpperCase() === plate &&
+    v.date === date &&
+    k !== editingTruckId
+  );
+
+  if (matches.length > 0) {
+    const m = matches[0][1];
+    const workerColor = WORKER_COLORS[m.worker] || '#6b7280';
+    warn.innerHTML = `⚠️ <strong>${plate}</strong> already recorded on ${date} — Worker: <span style="color:${workerColor}">${m.worker||'Unassigned'}</span>, Status: ${m.status}`;
+    warn.classList.add('visible');
+  } else {
+    warn.classList.remove('visible');
+  }
 }
 
 // ── ADD TRUCK ──
@@ -1587,6 +1697,9 @@ window.openAddTruck = function() {
   document.getElementById('truckPlate').value = '';
   document.getElementById('truckDate').value = document.getElementById('dateFilter').value;
   document.getElementById('truckNotes').value = '';
+  // Clear duplicate warning
+  const warn = document.getElementById('dupWarning');
+  if (warn) warn.classList.remove('visible');
 
   const workers = getWorkerList();
   const sel = document.getElementById('truckWorker');
@@ -1595,8 +1708,10 @@ window.openAddTruck = function() {
   if (currentUser.role==='worker') {
     sel.value = currentUser.id;
     document.getElementById('workerGroup').style.display='none';
+    document.getElementById('statusGroup').style.display='none';
   } else {
     document.getElementById('workerGroup').style.display='';
+    document.getElementById('statusGroup').style.display='';
   }
 
   buildStatusRadio('statusRadio', 'unpaid');
@@ -1633,7 +1748,8 @@ window.saveTruck = function() {
   const plate = document.getElementById('truckPlate').value.trim().toUpperCase();
   const date = document.getElementById('truckDate').value;
   const worker = document.getElementById('truckWorker').value;
-  const status = getRadioVal('statusRadio');
+  // Workers cannot set payment status — always defaults to unpaid
+  const status = currentUser.role==='worker' ? 'unpaid' : getRadioVal('statusRadio');
   const notes = document.getElementById('truckNotes').value.trim();
   if (!plate) { showToast('⚠️ Enter plate number'); return; }
   if (!date) { showToast('⚠️ Select date'); return; }
@@ -1645,10 +1761,11 @@ window.saveTruck = function() {
     return;
   }
   const duplicate = Object.entries(trucks).find(([k,v])=>
-    v.plate.toUpperCase()===plate && v.date===date && k!==editingTruckId
+    v.plate && v.plate.toUpperCase()===plate && v.date===date && k!==editingTruckId
   );
   if (duplicate) {
-    showToast(`⚠️ ${plate} already recorded on ${date}`);
+    const dupTruck = duplicate[1];
+    showToast(`⚠️ ${plate} already recorded on ${date} (${dupTruck.status})`);
     return;
   }
 
@@ -2048,13 +2165,7 @@ function renderManage() {
     <div>
       <div class="manage-section-title">⚠️ DANGER ZONE</div>
       <div class="manage-card">
-        <div class="manage-item" onclick="openModal('modalRecycle');renderRecycle()">
-          <div class="manage-item-left">
-            <div class="manage-item-icon">🗑️</div>
-            <div><div class="manage-item-name">Recycle Bin</div></div>
-          </div>
-        </div>
-        <div class="manage-item" onclick="clearAllData()">
+<div class="manage-item" onclick="clearAllData()">
           <div class="manage-item-left">
             <div class="manage-item-icon">⚠️</div>
             <div><div class="manage-item-name" style="color:var(--red)">Clear All Truck Data</div></div>
@@ -2181,6 +2292,8 @@ window.saveNewWorker = function() {
   workers.push(name);
   saveWorkerList(workers);
   setPin(name, pin);
+  // Set safe default permissions for new worker
+  setUserPerms(name, {canAddOwnTrucks:true, canEditStatus:false, seeEarnings:true, seeStats:true, seeAllTrucks:false, seeTeam:false});
   buildWorkerFilterBar();
   renderManage();
   renderWorkers();
@@ -2198,44 +2311,119 @@ window.removeWorker = function(name) {
 }
 
 // ── RECYCLE BIN ──
+let recycleFilter = 'all';
+let recycleSearchQ = '';
+
+window.setRecycleFilter = function(f, el) {
+  recycleFilter = f;
+  document.querySelectorAll('#recycleFilterBar .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderRecycleList();
+}
+window.filterRecycle = function() {
+  recycleSearchQ = (document.getElementById('recycleSearch')?.value || '').trim().toUpperCase();
+  renderRecycleList();
+}
+
 function renderRecycle() {
   const container = document.getElementById('recycleList');
-  container.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><p>Loading...</p></div>';
+  if (!container) return;
+  container.innerHTML = '<div class="recycle-empty"><div class="icon">⏳</div><p>Loading...</p></div>';
   get(ref(db,'deleted')).then(snap => {
     deletedTrucks = snap.val() || {};
-    const list = Object.entries(deletedTrucks).map(([k,v])=>({...v,_id:k}))
-      .sort((a,b)=>(b.deletedAt||0)-(a.deletedAt||0));
-    if (list.length===0) {
-      container.innerHTML = '<div class="empty-state"><div class="icon">🗑️</div><p>Recycle bin is empty</p></div>';
-      return;
-    }
-    container.innerHTML = list.map(t=>`
+    renderRecycleList();
+  }).catch(() => {
+    container.innerHTML = `<div class="recycle-empty"><div class="icon">⚠️</div><p>Could not load bin. Check connection.</p></div>`;
+  });
+}
+
+function renderRecycleList() {
+  const container = document.getElementById('recycleList');
+  if (!container) return;
+
+  let list = Object.entries(deletedTrucks)
+    .map(([k,v]) => ({...v, _id:k}))
+    .sort((a,b) => (b.deletedAt||0) - (a.deletedAt||0));
+
+  // Update count badge
+  const countEl = document.getElementById('recycleBinCount');
+  if (countEl) countEl.textContent = list.length > 0 ? `${list.length} truck${list.length!==1?'s':''}` : '';
+
+  // Update nav badge
+  const navBin = document.getElementById('nav_recycle');
+  if (navBin) {
+    const lbl = navBin.querySelector('.nav-label');
+    if (lbl) lbl.textContent = list.length > 0 ? `Bin (${list.length})` : 'Bin';
+  }
+
+  // Apply filters
+  if (recycleFilter !== 'all') list = list.filter(t => t.status === recycleFilter || (recycleFilter==='unpaid' && (t.status==='unpaid'||t.status==='pending')));
+  if (recycleSearchQ) list = list.filter(t => (t.plate||'').toUpperCase().includes(recycleSearchQ));
+
+  if (list.length === 0) {
+    container.innerHTML = `<div class="recycle-empty"><div class="icon">🗑️</div><p>${Object.keys(deletedTrucks).length===0 ? 'Recycle bin is empty' : 'No trucks match your filter'}</p></div>`;
+    return;
+  }
+
+  container.innerHTML = list.map(t => {
+    const statusClass = t.status==='paid'?'paid':t.status==='partial'?'partial':t.status==='pending'?'pending':'unpaid';
+    const statusLabel = t.status==='paid'?'✅ Paid':t.status==='partial'?'⚡ Partial':t.status==='pending'?'🟡 Pending':'❌ Unpaid';
+    const deletedTime = t.deletedAt ? new Date(t.deletedAt).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+    const workerColor = WORKER_COLORS[t.worker] || '#6b7280';
+    const daysAgo = t.deletedAt ? Math.floor((Date.now()-t.deletedAt)/(1000*60*60*24)) : null;
+    const ageStr = daysAgo===null ? '' : daysAgo===0 ? 'today' : daysAgo===1 ? '1 day ago' : `${daysAgo} days ago`;
+    return `
       <div class="deleted-card">
-        <div class="truck-plate">${t.plate}</div>
-        <div class="truck-meta">📅 ${t.date} · ${t.status} · ${t.worker||'Unassigned'}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">Deleted: ${t.deletedAt?new Date(t.deletedAt).toLocaleString():'-'}</div>
+        <div class="deleted-card-header">
+          <div class="deleted-plate">${t.plate||'—'}</div>
+          <span class="status-badge ${statusClass}">${statusLabel}</span>
+        </div>
+        <div class="deleted-meta">
+          📅 ${t.date||'—'} &nbsp;·&nbsp;
+          <span style="color:${workerColor};font-weight:600">${t.worker||'Unassigned'}</span>
+          ${t.notes ? `&nbsp;·&nbsp; 📝 ${t.notes}` : ''}
+        </div>
+        <div class="deleted-meta" style="font-size:10px;color:var(--text3)">
+          🗑️ Deleted ${ageStr ? ageStr+' · ' : ''}${deletedTime}${t.deletedBy ? ` by ${t.deletedBy}` : ''}
+          &nbsp;·&nbsp; ➕ Added by ${t.addedBy||'—'}
+        </div>
         <div class="deleted-actions">
           <button class="truck-action-btn primary" onclick="restoreTruck('${t._id}')">↩️ Restore</button>
           <button class="truck-action-btn danger" onclick="permDelete('${t._id}')">🗑️ Delete Forever</button>
         </div>
       </div>
-    `).join('');
-  });
+    `;
+  }).join('');
 }
 window.restoreTruck = function(id) {
   const t = deletedTrucks[id];
   if (!t) return;
-  const {_id,...data} = t;
-  set(ref(db,'trucks/'+id), {...data, deletedAt:null, deletedBy:null});
+  if (!confirm(`Restore truck ${t.plate} back to active list?`)) return;
+  const restored = {...t};
+  delete restored._id; delete restored.deletedAt; delete restored.deletedBy;
+  set(ref(db,'trucks/'+id), restored);
   remove(ref(db,'deleted/'+id));
+  delete deletedTrucks[id];
   showToast('↩️ Truck restored');
-  renderRecycle();
+  renderRecycleList();
 }
 window.permDelete = function(id) {
-  if (!confirm('Delete forever? This cannot be undone.')) return;
+  const t = deletedTrucks[id];
+  const plate = t ? t.plate : 'this truck';
+  if (!confirm(`Permanently delete ${plate}? This CANNOT be undone.`)) return;
   remove(ref(db,'deleted/'+id));
-  showToast('🗑️ Permanently deleted');
-  renderRecycle();
+  delete deletedTrucks[id];
+  showToast(`🗑️ ${plate} permanently deleted`);
+  renderRecycleList();
+}
+window.emptyRecycleBin = function() {
+  const total = Object.keys(deletedTrucks).length;
+  if (total === 0) { showToast('Bin is already empty'); return; }
+  if (!confirm(`Permanently delete ALL ${total} trucks in the bin? This CANNOT be undone.`)) return;
+  remove(ref(db,'deleted'));
+  deletedTrucks = {};
+  showToast(`🗑️ Emptied — ${total} trucks permanently deleted`);
+  renderRecycleList();
 }
 window.clearAllData = function() {
   if (!confirm('Clear ALL truck data? This cannot be undone!')) return;
@@ -2275,10 +2463,43 @@ window.exportExcel = function() {
   showToast('📊 Exported!');
 }
 let deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); deferredPrompt=e; });
+let appInstalled = false;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show install button in manage tab if it's visible
+  const btn = document.getElementById('installAppBtn');
+  if (btn) btn.style.display = '';
+});
+
+window.addEventListener('appinstalled', () => {
+  appInstalled = true;
+  deferredPrompt = null;
+  showToast('✅ App installed successfully!');
+  const btn = document.getElementById('installAppBtn');
+  if (btn) btn.textContent = '✅ App Installed';
+});
+
 window.installApp = function() {
-  if (deferredPrompt) { deferredPrompt.prompt(); }
-  else { showToast('📲 Open in browser and use "Add to Home Screen"'); }
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(choice => {
+      if (choice.outcome === 'accepted') showToast('✅ Installing app...');
+      else showToast('ℹ️ Install dismissed');
+      deferredPrompt = null;
+    });
+  } else if (appInstalled) {
+    showToast('✅ App is already installed');
+  } else {
+    // iOS Safari instructions
+    const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    if (isIOS) {
+      showToast('📲 Tap Share → "Add to Home Screen" in Safari');
+    } else {
+      showToast('📲 Use browser menu → "Install App" or "Add to Home Screen"');
+    }
+  }
 }
 window.downloadHTML = function() {
   const html = document.documentElement.outerHTML;
@@ -2335,14 +2556,63 @@ function initIcons() {
     const c = document.getElementById(id);
     if (c) drawWKABEIcon(c);
   });
-  // Set as apple touch icon
-  const c = document.createElement('canvas');
-  c.width = c.height = 192;
-  drawWKABEIcon(c);
-  const link = document.createElement('link');
-  link.rel = 'apple-touch-icon';
-  link.href = c.toDataURL('image/png');
-  document.head.appendChild(link);
+
+  // Generate proper PNG icons from canvas and inject into document
+  [192, 512].forEach(size => {
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    drawWKABEIcon(c);
+    const dataUrl = c.toDataURL('image/png');
+
+    // Apple touch icon (use 192)
+    if (size === 192) {
+      // Remove existing apple touch icons first
+      document.querySelectorAll('link[rel="apple-touch-icon"]').forEach(l => l.remove());
+      const link = document.createElement('link');
+      link.rel = 'apple-touch-icon';
+      link.sizes = '192x192';
+      link.href = dataUrl;
+      document.head.appendChild(link);
+    }
+
+    // Patch manifest dynamically with canvas-generated PNG icons
+    // (Replaces the jpeg reference which can't be maskable)
+    if (size === 192 || size === 512) {
+      patchManifestIcon(size, dataUrl);
+    }
+  });
+}
+
+// Dynamically inject a <link rel="manifest"> with patched icons (base64 PNG)
+let _manifestPatched = false;
+function patchManifestIcon(size, dataUrl) {
+  // We patch by injecting a blob-based manifest override once both icons ready
+  if (!window._iconCache) window._iconCache = {};
+  window._iconCache[size] = dataUrl;
+  if (window._iconCache[192] && window._iconCache[512] && !_manifestPatched) {
+    _manifestPatched = true;
+    const manifest = {
+      name: 'WKABE Hask Tracker',
+      short_name: 'WKABE',
+      description: 'Hask Services — Djibouti Truck Tracker',
+      start_url: '/OliTest/?pwa=1',
+      scope: '/OliTest/',
+      display: 'standalone',
+      orientation: 'portrait',
+      background_color: '#0f1623',
+      theme_color: '#0f1623',
+      categories: ['business'],
+      icons: [
+        { src: window._iconCache[192], sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+        { src: window._iconCache[512], sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+      ]
+    };
+    const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    // Replace the manifest link
+    const existing = document.querySelector('link[rel="manifest"]');
+    if (existing) existing.href = url;
+  }
 }
 
 // ── SPLASH ──
@@ -2394,19 +2664,55 @@ function generateIcon(size) {
   ctx.fillText('HSK', size/2, size/2);
   return c.toDataURL('image/png');
 }
-// Set icons dynamically
-document.addEventListener('DOMContentLoaded', () => {
-  const icon192 = generateIcon(192);
-  const icon512 = generateIcon(512);
-  const link192 = document.createElement('link');
-  link192.rel = 'apple-touch-icon';
-  link192.href = icon192;
-  document.head.appendChild(link192);
-});
+// Icons are handled by initIcons() which runs at bottom of script
 
 // ── SERVICE WORKER (PWA) ──
+let swReg = null;
+let newWorker = null;
+
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/OliTest/sw.js').catch(()=>{});
+  navigator.serviceWorker.register('/OliTest/sw.js').then(reg => {
+    swReg = reg;
+
+    // Check for waiting worker on load (app reloaded after update was found)
+    if (reg.waiting) showUpdateBanner(reg.waiting);
+
+    // New SW installed but waiting
+    reg.addEventListener('updatefound', () => {
+      const nw = reg.installing;
+      nw.addEventListener('statechange', () => {
+        if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+          showUpdateBanner(nw);
+        }
+      });
+    });
+
+    // Periodic update check every 60 minutes
+    setInterval(() => reg.update(), 60 * 60 * 1000);
+
+  }).catch(err => console.warn('SW registration failed:', err));
+
+  // When the new SW takes control, reload to get fresh app
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) { refreshing = true; window.location.reload(); }
+  });
+}
+
+function showUpdateBanner(worker) {
+  newWorker = worker;
+  const banner = document.getElementById('updateBanner');
+  if (banner) banner.classList.add('show');
+}
+
+window.applyUpdate = function() {
+  const banner = document.getElementById('updateBanner');
+  if (banner) banner.classList.remove('show');
+  if (newWorker) {
+    newWorker.postMessage('skipWaiting');
+  } else if (swReg && swReg.waiting) {
+    swReg.waiting.postMessage('skipWaiting');
+  }
 }
 
 // ── INIT ──
